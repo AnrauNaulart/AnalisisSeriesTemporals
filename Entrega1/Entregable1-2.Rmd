@@ -1,0 +1,253 @@
+---
+title: "Número de passajeros en el puerto de Barcelona (2012-2019)"
+author: "Arnau Nualart i Pol Garcia"
+date: "8/11/2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+# Introducció
+
+# Analisi descriptivo de la serie
+## Gráfico
+
+```{r echo = FALSE, fig.align = 'center', fig.dim=c(7, 4)}
+serie=window(ts(read.table("pasajebcn.dat"),start=1997,freq=12),start=2012)
+
+plot(serie, main = "Número de pasajeros en el Puerto de Barcelona")
+abline(v = 2012:2019, col = 4, lty = 3)
+```
+
+
+## Filtro lineal 
+
+```{r echo = FALSE, fig.align = 'center', fig.dim=c(7, 4)}
+k = 6
+```
+
+Una vez se conoce el valor de todos los coeficientes se grafica la tendencia de la serie:
+
+```{r echo = FALSE, fig.align = 'center', fig.dim=c(7, 4)}
+trend = filter(serie, c(1/(4*k), rep(1/(2*k), 2*k-1), 1/(4*k)), sides = 2)
+plot(serie, main = "Número de pasajeros en el Puerto de Barcelona")
+lines(trend, col = 2, lwd = 2)
+```
+
+## Estimar la componente de estacionalidad (S)
+
+Para estimar la componente de estacionalidad, los índices estacionales, es muy importante que éstos se calculen a partir de la serie sin tendencia, ya que de lo contrario los resultados no serían los correctos.
+
+Si se hace una representación visual del componente de estacionalidad se obtienen los siguientes resultados: 
+
+```{r echo = FALSE, fig.align = 'center', fig.dim=c(7, 4)}
+seas = apply(matrix(serie-trend, nrow = 2*k), 1, mean, na.rm = T)
+plot(seas, type = "h", lwd = 4, main = "Índices estacionales")
+lines(seas, col = 2)
+abline(h = 0)
+```
+
+
+## Eliminamos las componentes T i S de la Serie
+
+```{r echo = FALSE, fig.align = 'center', fig.dim=c(7, 4)}
+plot(serie-trend-seas)
+abline(h = 0)
+abline(v = 2012:2020, col = 4, lty = 3)
+```
+
+Efectivamente, la distribución de los residuos no sigue ningún patrón, éstos están distribuidos de forma aleatoria en torno al valor nulo.
+
+## Resumen de las diferents secciones de la serie
+
+```{r echo = FALSE, fig.align = 'center', fig.dim=c(7, 4)}
+plot(decompose(serie))
+```
+
+
+
+# Metodología de alisado
+
+Hay 6 tipos de series temporales, los cuales vienen definidos de la siguiente forma:
+  
+## Esquema aditivo
+- **Serie temporal de tipus 1 - sin tendencia ni estacionalidad**
+- Ecuación para el suavizado del nivel:
+- Valores iniciales: $\alpha, l_0$
+- Parámetros a estimar: $\alpha$
+  
+- **Serie temporal de tipus 2 - con tendencia y sin estacionalidad**
+- Ecuación para el suavizado del nivel:
+- Ecuación para el suavizado del pendiente (tendencia):
+- Valores iniciales: $\alpha, l_0, \beta, b_0$
+- Parámetros a estimar: $\alpha, \beta$
+  
+- **Serie temporal de tipus 3 - sin tendencia y con estacionalidad aditiva**
+- Ecuación para el suavizado del nivel:
+- Ecuación para el suavizado de la estacionalidad:
+- Valores iniciales: $\alpha, l_0, \gamma, S_{-m+1},...,S_0$
+- Parámetros a estimar: $\alpha, \gamma$
+  
+- **Serie temporal de tipus 4 - con tendencia y con estacionalidad aditiva**
+- Ecuación para el suavizado del nivel: 
+- Ecuación para el suavizado de la tendencia: 
+- Ecuación para el suavizado de la estacionalidad:
+- Valores iniciales: $\alpha, l_0, \beta, b_0, \gamma, S_{-m+1},...,S_0$
+- Parámetros a estimar: $\alpha, \beta, \gamma$
+
+## Esquema multiplicatiu
+- **Serie temporal de tipus 5 - sin tendencia y con estacionalidad multiplicativa**
+- Ecuación para el suavizado del nivel: 
+- Ecuación para el suavizado de la estacionalidad: 
+- Valores iniciales: $\alpha, l_0, \gamma, S_{-m+1},...,S_0$
+- Parámetros a estimar: $\alpha, \gamma$
+  
+- **Serie temporal de tipus 6 - con tendencia y con estacionalidad multiplicativa**
+- Ecuación para el suavizado del nivel:
+- Ecuación para el suavizado de la tendencia: 
+- Ecuación para el suavizado de la estacionalidad:
+- Valores iniciales: $\alpha, l_0, \beta, \gamma, S_{-m+1},...,S_0$
+- Parámetros a estimar: $\alpha, \beta, \gamma$
+  
+
+## **Asumir que la serie es tipo 3 (ANA) y aplicar filtro de Holt winters.**
+
+```{r message=FALSE, warning=FALSE}
+(hw<-HoltWinters(serie,alpha=NULL,beta=FALSE,gamma=NULL,seasonal="additive"))
+ts.plot(fitted(hw)[,1],serie,col=c(3,1),lwd=c(3,1))
+
+```
+
+- Comentar Parámetros.
+
+
+### Predicción a h pasos (out-of-sample).
+
+```{r message=FALSE, warning=FALSE}
+pred=predict(hw,36)
+ts.plot(serie,pred,col=c(1,2),lwd=c(1,2))
+```
+
+- Comentar predicción.
+
+## **Asumir que la serie es tipo 4 (AAA) y aplicar filtro de Holt winters.**
+
+```{r message=FALSE, warning=FALSE}
+(hw<-HoltWinters(serie,alpha=NULL,beta=NULL,gamma=NULL,seasonal="additive"))
+ts.plot(fitted(hw)[,1],serie,col=c(3,1),lwd=c(3,1))
+```
+
+- Comentar Parámetros.
+
+### Predicción a h pasos (out-of-sample).
+
+```{r message=FALSE, warning=FALSE}
+pred=predict(hw,36)
+ts.plot(serie,pred,col=c(1,2),lwd=c(1,2))
+```
+
+- Comentar predicción.
+
+
+## **Asumir que la serie es tipo 5 (ANM) y aplicar filtro de Holt winters.**
+
+```{r message=FALSE, warning=FALSE}
+(hw<-HoltWinters(serie,alpha=NULL,beta=FALSE,gamma=NULL,seasonal="multiplicative"))
+ts.plot(fitted(hw)[,1],serie,col=c(3,1),lwd=c(3,1))
+```
+
+- Comentar Parámetros.
+
+### Predicción a h pasos (out-of-sample).
+
+```{r message=FALSE, warning=FALSE}
+pred=predict(hw,36)
+ts.plot(serie,pred,col=c(1,2),lwd=c(1,2))
+```
+
+- Comentar predicción.
+
+```{r echo=FALSE, results='hide',message=FALSE}
+par(mfrow=c(2,3))
+tuneS1<-function(par){
+  hw1<-HoltWinters(serie,alpha=par,beta=F,gamma=F)
+  mean((serie-fitted(hw1)[,1])^2)
+}
+par=0.5
+sol<-optim(par,tuneS1,method="L-BFGS-B",lower=1e-4,uppara=0.9999)
+hw1<-HoltWinters(serie,alpha=sol$par,beta=F,gamma=F)
+
+phw1<-predict(hw1,24)
+ts.plot(serie,phw1,hw1$fitted[,1],col=c(1,2,3),main=paste0("(1)ANN MSE=",round(sol$value,4)))
+
+tuneS2<-function(par){
+  hw2<-HoltWinters(serie,alpha=par[1],beta=par[2],gamma=F)
+  mean((serie-fitted(hw2)[,1])^2)
+}
+par=c(0.5,0.5)
+sol<-optim(par,tuneS2,method="L-BFGS-B",lower=c(1e-4,1e-4),uppara=c(0.9999,0.9999))
+hw2<-HoltWinters(serie,alpha=sol$par[1],beta=sol$par[2],gamma=F)
+
+phw2<-predict(hw2,24)
+ts.plot(serie,phw2,hw2$fitted[,1],col=c(1,2,3),main=paste0("(2)AAN MSE=",round(sol$value,4)))
+
+
+tuneS3<-function(par){
+  hw3<-HoltWinters(serie,alpha=par[1],beta=FALSE,gamma=par[2])
+  mean((serie-fitted(hw3)[,1])^2)
+}
+par=c(0.5,0.5)
+sol<-optim(par,tuneS3,method="L-BFGS-B",lower=c(1e-4,1e-4),uppara=c(0.9999,0.9999))
+hw3<-HoltWinters(serie,alpha=sol$par[1],beta=FALSE,gamma=sol$par[2])
+
+phw3<-predict(hw3,24)
+ts.plot(serie,phw3,hw3$fitted[,1],col=c(1,2,3),main=paste0("(3)ANA MSE=",round(sol$value,4)))
+
+
+tuneS4<-function(par){
+  hw4<-HoltWinters(serie,alpha=par[1],beta=par[2],gamma=par[3])
+  mean((serie-fitted(hw4)[,1])^2)
+}
+par=c(0.5,0.5,0.5)
+sol<-optim(par,tuneS4,method="L-BFGS-B",lower=c(1e-4,1e-4,1e-4),uppara=c(0.9999,0.9999,0.9999))
+hw4<-HoltWinters(serie,alpha=sol$par[1],beta=sol$par[2],gamma=sol$par[3])
+
+phw4<-predict(hw4,24)
+ts.plot(serie,phw4,hw4$fitted[,1],col=c(1,2,3),main=paste0("(4)AAA MSE=",round(sol$value,4)))
+
+tuneS5<-function(par){
+  hw5<-HoltWinters(serie,alpha=par[1],beta=FALSE,gamma=par[2],seasonal="multip")
+  mean((serie-fitted(hw5)[,1])^2)
+}
+par=c(0.5,0.5)
+sol<-optim(par,tuneS5,method="L-BFGS-B",lower=c(1e-4,1e-4),uppara=c(0.9999,0.9999))
+hw5<-HoltWinters(serie,alpha=sol$par[1],beta=FALSE,gamma=sol$par[2],seasonal="m")
+
+phw5<-predict(hw5,24)
+ts.plot(serie,phw5,hw5$fitted[,1],col=c(1,2,3),main=paste0("(5)ANM MSE=",round(sol$value,4)))
+
+
+tuneS6<-function(par){
+  hw6<-HoltWinters(serie,alpha=par[1],beta=par[2],gamma=par[3],seasonal="multip")
+  mean((serie-fitted(hw6)[,1])^2)
+}
+par=c(0.3,0.1,0.1)
+sol<-optim(par,tuneS6,method="L-BFGS-B",lower=c(1e-4,1e-4,1e-4),uppara=c(0.9999,0.9999,0.9999))
+hw6<-HoltWinters(serie,alpha=sol$par[1],beta=sol$par[2],gamma=sol$par[3],seasonal="m")
+
+phw6<-predict(hw6,24)
+ts.plot(serie,phw6,hw6$fitted[,1],col=c(1,2,3),main=paste0("(6)AAM MSE=",round(sol$value,4)))
+```
+
+Vemos que el error cuadrático medio da más pequeño con diferencia al quinto tipo de serie (845'0071). sería el año que correspondería a la no tendencia y la estacionalidad multiplicativa.
+
+Por tanto, se concluye tanto de forma gráfica como numérica que los datos sobre el número de pasajeros mensuales en el puerto de Barceona paratenecen a una serie temporal de tipo 5.

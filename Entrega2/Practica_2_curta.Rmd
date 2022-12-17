@@ -1,0 +1,1327 @@
+---
+title: "Ocupación de viajeros en alojamientos de turismo rural en España (2009 - 2019)"
+fontsize: 12pt
+geometry: margin = 1.50cm
+output:
+  pdf_document:
+    number_sections: yes
+line-height: 5
+classoption: a4paper
+language: id
+header-includes:
+  - \usepackage{titling}
+  - \pretitle{
+      \begin{center}
+      \includegraphics[width = 4in, height = 4in]{Captura.jpg}\LARGE\\
+    }
+  - \posttitle{\end{center}}
+---
+
+\begin{center} 
+
+Análisi de Series Temporales
+
+\end{center}
+
+>
+
+>
+
+>
+
+>
+
+>
+
+>
+
+>
+
+Sara Montañés González
+
+Raquel Ortiz Martín
+
+>
+
+>
+
+******
+
+\begin{center}
+
+El objetivo de este informe es ver el comportamiento de la demanda en alojamientos de turismo rural durante los años 2009 - 2019 y hacer una predicción para el período 2020 si no se tuvieran en cuenta los efectos causados por la pandemia del SARS-CoV-2.
+
+Se observa que el mejor modelo para explicar los datos y hacer una predicción a largo plazo es un $ARMA(1, 1)SMA(1)_{12}$.
+
+En cuanto a la predicción de un tiempo extrapolable a los datos, se puede ver que la demanda sigue aumentando con la misma tendencia y continuando con el mismo patrón estacional.
+
+\end{center}
+
+******
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+# Introducción
+
+## Descripción del entorno y el problema - motivación del trabajo
+
+Desde el estallido de la pandemia del SARS-CoV-2 las preferencias de la población respecto a sus destinos vacacionales parecen haber cambiado.
+Actualmente, los viajeros están más interesados en lugares naturales, al aire libre, debido a que en la época del confinamiento mucha parte de la población se sintió agobiada dentro de sus hogares. Adicionalmente, los españoles se han centrado en un turismo nacional debido a la situación de crisis sanitaria que estamos viviendo. Así pues, la demanda en alojamientos nacionales de turismo rural parece haber aumentado considerablemente respecto a años anteriores. 
+
+El objetivo principal de este informe es ver cuál era el comportamiento de la demanda en alojamientos de turismo rural en los años anteriores a la pandemia. De esta manera se podrá ver si este aumento ha sido causado únicamente a las circunstancias mencionadas o si la demanda ya presentaba una tendencia creciente en el periodo 2009 - 2019. 
+
+Para la elección de los años analizados, se ha evitado estudiar aquellos momentos temporales en los que había un factor condicionante. Por tanto, los datos tomados dejan fuera la crisis económica del 2008 y la pandemia del 2020. Teniendo esto en cuenta, solo se han seleccionado los datos mensuales pertenecientes al espacio temporal comprendido entre 2009 y 2019, ambos períodos incluidos. 
+
+\medskip 
+
+## Definición precisa de la variable
+
+La variable a estudiar es el número de viajeros en alojamientos de turismo rural durante el periodo ya comentado anteriormente. Cabe destacar que esta variable únicamente recoge el total nacional, es decir, aquellos viajeros procedentes de las comunidades y ciudades autónomas españolas.
+
+\medskip
+
+## Descripción de la fuente de información
+
+Los datos han sido extraídos de la página web del Instituto Nacional de Estadística (INE) de España. Este organismo público realiza mensualmente la Encuesta de ocupación en alojamientos de turismo rural, proporcionando información sobre la oferta y la demanda de los servicios de este tipo de alojamiento. Los datos se encuentran en el siguiente enlace: *https://ine.es/jaxiT3/Tabla.htm?t=2941*
+
+\medskip
+
+## Resumen de la estructura del trabajo
+
+El estudio sigue el siguiente esquema:
+
+- **Metodología empleada**
+
+> En este apartado se transforma la serie en estacionaria, se grafica el ACF y el PACF con la finalidad de identificar modelos pausibles y se estiman los modelos propuestos. Finalmente, se hace una validación de estos para asegurarnos que los residuos cumplen las hipótesis de normalidad, homocedasticidad e independencia. 
+
+- **Resultados**
+
+> A partir del análisis realizado en el apartado anterior se decide qué modelo ajusta mejor los datos. Para saberlo, se verifica la estabilidad de éstos y se realiza una predicción *out-of-sample* para así poder calcular el RMSE y el MAPE. En funcón de los resultados anteriores, se selecciona el mejor modelo, con el que se llevará a cabo el objetivo principal del estudio, hacer una predicción a largo plazo del número de viajeros en alojamientos rurales en los próximos años si no existiera ningún factor condicionante que actuara como brecha, en el caso expuesto, si no existiera la pandemia del Covid-19.
+
+\pagebreak
+
+# Metodología empleada
+## Análisis descriptivo de la serie
+
+El análisis descriptivo de la serie consistirá en un gráfico que permitirá observar la distribución de los datos a lo largo de los 11 años estudiados. El gráfico temporal tiene la siguiente forma: 
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+
+```{r echo = FALSE, fig.align = 'center', fig.dim=c(5.5, 2.9)}
+serie = window(ts(read.table("datos.txt", header = F)/1000, start = 2009, freq = 12), start = 2009)
+plot(serie, main = "Ocupacion en alojamientos de turismo rural en España")
+abline(v = 2009:2019, col = 4, lty = 3)
+```
+
+Como ya se explicó con detalle en la práctica 1, la serie estudiada presenta una tendencia creciente y una estacionalidad multiplicativa de orden s = 12. 
+
+>
+
+## Identificación del modelo
+### Transformación de la serie temporal en una serie estacionaria
+
+Para poder trabajar con los datos de una forma más estable es necesario que la serie estudiada sea estacionaria. ¿Qué requisitos tiene que cumplir para conseguirlo? Varianza constante, que no exista la componente estacional y que presente media constante. Se procede a estudiar dichos aspectos: 
+
+\medskip 
+
+**¿Parece ser la varianza constante?**
+
+Se dispone de dos soportes gráficos que permiten ver si la varianza de la serie es constante o no: *Gráfico medias vs varianzas* y *Boxplot por periodos*. 
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(7, 2.9)}
+par(mfrow=c(1,2))
+
+m = apply(matrix(serie,ncol=12),2,mean)
+v = apply(matrix(serie,ncol=12),2,var)
+plot(v~m,main="Mean-Variance plot")
+
+boxplot(serie~floor(time(serie)), main = "Boxplot")
+```
+
+En el caso del primer gráfico, se observa que un augmento de la media (eje x) implica un aumento de la varianza (eje y). Para el boxplot se observa que el rango intercuartílico (amplitud de las cajas) aumenta conforme aumenta el nivel de la serie. 
+
+Por tanto, gracias a los resultados obtenidos en ambas representaciones, se conluye que **la varianza de la serie no es constante**. Para conseguir que si lo sea, es necesario aplicar una transformación, en este caso, se ha optado por una **transformación logarítmica**. Para asegurarnos que se ha realizado la transformación correcta, se vuelven a graficar los datos, pero ahora, en escala logarítmica. 
+
+```{r echo = FALSE, fig.dim = c(5.5, 3), fig.align='center'}
+lnserie=log(serie)
+plot(lnserie,type="o")
+```
+
+La varianza de la serie se ha estabilizado al aplicar la transformación logaritmica. 
+
+\medskip
+
+**¿Presenta la serie un patrón estacional?**
+
+Para dar respuesta a la pregunta expuesta, se hace uso de la función `montplot`, la cual calcula la media en cada orden estacional, en el presente caso, para cada mes. 
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(5.5, 3)}
+monthplot(lnserie)
+```
+
+Se observa que la media no es la misma para cada mes, ya que las líneas horizontales se encuentran en alturas distintas. Así pues la serie **presenta un patrón estacional de orden S = 12**. Para poder eliminarlo, se realiza una diferenciación estacional (D = 1), es decir, se restan las observaciones del patrón estacional anterior. Por tanto, se eliminarán S = 12 observaciones, las 12 primeras. 
+
+```{r echo = FALSE}
+d12lnserie<-diff(lnserie,lag=12)
+```
+
+
+Se vuelve a utilizar la función `monthplot` sobre la serie diferenciada estacionalmente para verificar que el patrón estacional se ha eliminado. 
+
+```{r echo = FALSE, fig.dim = c(5.5, 2.7), fig.align='center'}
+monthplot(d12lnserie)
+```
+
+Efectivamente, diferenciando la serie estacionalmente una vez se consigue eliminar el patrón estacional, ya que ahora las medias de cada mes son muy parecidas entre ellas. 
+
+\medskip
+
+**¿Es la media de la serie constante?**
+
+Se obtiene el gráfico temporal de la serie en escala logarítmica y con una diferenciación estacional. 
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(5.5, 2.7)}
+plot(d12lnserie,main="d12lnserie")
+abline(h=0)
+abline(h=mean(d12lnserie), col=2)
+```
+
+La media de la serie si parece constante pero se observa que la media no toma el valor 0. Por acuerdo académico no se trabajará con medias distintas a 0. Así pues, para cumplir el acuerdo, se hace una diferenciación regular (d = 1). Para verificar que la media de la serie toma el valor 0 se vuelve a graficar la serie temporal una vez aplicada dicha diferenciación. 
+
+```{r echo = FALSE}
+d1d12lnserie <- diff(d12lnserie)
+```
+
+
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(5.5, 2.7)}
+plot(d1d12lnserie,main="d1d12lnserie")
+abline(h=0)
+abline(h=mean(d1d12lnserie), col=2)
+```
+La media de la serie ahora si toma el valor 0. Para assegurar que la serie no presenta sobrediferenciación se comparan las varianzas. La mejor serie será aquella que tenga una menor varianza. 
+
+```{r echo = FALSE}
+v1 <- var(lnserie)
+v2 <- var(d12lnserie)
+v3 <- var(d1d12lnserie)
+```
+
+| Modelo   | lnserie | d12lnserie | d1d12lnserie |
+|----------|---------|------------|--------------|
+| Varianza | `r v1`  | `r v2`     | `r v3`       |
+
+Se observa que la serie con menor varianza es aquella que presenta escala logarítmica y una diferenciación estacional. Por tanto, significa que la diferenciación regular no es necesaria. Aún así, ésta se mantendrá por el motivo expuesto anteriormente, para conseguir que la media tome el valor 0. 
+
+>
+
+### Identificación de modelos pausibles
+
+Para identificar algunos modelos se grafican el ACF y el PACF de la serie estacionaria. 
+
+Cabe destacar que primeramente se seleccionarán los modelos más parsimoniosos. Si en el apartado de *validación* no se valida ninguno de ellos, se volverá al presente apartado para proponer otros modelos más complejos. 
+
+Para una mejor identificación, en el siguiente gráfico se muestra en color rojo los "s" rezagos estacionales de la función (P)ACF. En negro, todos los rezagos regulares. 
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(7, 3)}
+par(mfrow=c(1,2))
+
+acf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,11)),lwd=2)
+pacf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(rep(1,11), 2),lwd=2)
+```
+
+Antes de la proposición de modelos, cabe especificar que se confirma que se ha llegado a la serie estacionaria ya que los valores de la ACF decaen de manera rápida hacia el 0. 
+
+\medskip
+
+Observando las graficas se concluye que: 
+
+- *Opciones para la parte regular*: MA(1), AR(3), ARMA(1, 1)
+
+- *Opciones para la parte estacional*: MA(1)
+
+Todas ellas con las diferenciaciones aplicadas, una regular (d = 1) y otra estacional (D = 1 con S = 12). 
+
+Así pues, se obtienen 3 posibles combinaciones, 3 modelos propuestos. 
+
+\pagebreak
+
+### Forma compacta y usando el operador de retardo B de los modelos identificados
+
+$W_t = (1-B)^d(1-B^S)^D ln(W_t)$
+
+\medskip
+
+\underline{Modelo 1:}  $MA(1)SMA(1)_{12}$ para $W_t$
+
+Forma compacta de modelo ARIMA para $ln(X_t)$
+
+> $(1-B)(1-B^{12}) ln(X_t) = \theta_1(B)\Theta_1(B^{12})Z_t, d = 1,\; y \; D = 1 \; con \; S = 12$
+
+Sustituyendo cada polinomio característico se obtiene:
+
+> $(1-B)(1-B^{12}) ln(X_t) = (1+\theta_1B)(1+\Theta_1B^{12})Z_t$
+
+\medskip
+
+\underline{Modelo 2:} $AR(3)SMA(1)_{12}$ para $W_t$
+
+Forma compacta de modelo ARIMA para $ln(X_t)$
+
+> $\phi_3(B) (1-B)(1-B^{12}) ln(X_t) = \Theta_1(B^{12})Z_t, d = 1,\; y \; D = 1 \; con \; S = 12$
+
+Sustituyendo cada polinomio característico se obtiene:
+
+> $(1-\phi_1B-\phi_2B^2-\phi_3B^3)(1-B)(1-B^{12}) ln(X_t) = (1+\Theta_1B^{12})Z_t$
+
+\medskip
+
+\underline{Modelo 3:} $ARMA(1,1)SMA(1)_{12}$ para $W_t$
+
+Forma compacta de modelo ARIMA para $ln(X_t)$
+
+> $\phi_1(B)(1-B)(1-B^{12}) ln(X_t) =\theta_1(B) \Theta_1(B^{12})Z_t, d = 1,\; y \; D = 1 \; con \; S = 12$
+
+Sustituyendo cada polinomio característico se obtiene:
+
+> $(1-\phi_1B)(1-B)(1-B^{12}) ln(X_t) = (1+\theta_1B)(1 + \Theta_1B^{12})Z_t$
+
+>
+
+## Estimación de los modelos
+
+Una vez se han expusto los modelos posibles, se procede a realizar su estimación a partir de la funció `arima`. Cabe destacar que dicha estimación se hará para la serie estacionaria y para la serie no estacionaria. Así pues, en total se verán seis modelos. Además, se calcularan los `T-ratios` para cada uno de los coeficientes. Éstos, deberán tomar un valor superior a 2 para que sean necesarios en la explicación de los datos. Por contra, si son inferiores a 2, no sern necesarios. Por esta misma razón, en los modelos de la serie estacionaria, se quiere que el valor del `intercept` salga no significativo, ya que se ha realizado una diferenciación regular extra para conseguir este mismo propòsito, que la media, el `intercept`, sea igual a 0. 
+
+\medskip
+
+### Modelo 1A, MA(1)SMA(1)$_{12}$
+
+Se impone a la serie estacional  `d1d12lnserie` el modelo identificado: ARIMA(0, 0, 1)(0, 0, 1)$_{12}$.
+
+```{r echo = FALSE}
+mod1A = arima(d1d12lnserie, order = c(0,0,1), seasonal = list(order = c(0,0,1), period=12))
+```
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 1a \n T-ratios:",round(mod1A$coef/sqrt(diag(mod1A$var.coef)),2))
+```
+El T-ratio del `intercept` es menor a 2, así que se plantea el modelo sin este coeficiente.
+
+\medskip
+
+### Modelo 1B, usando la serie no-estacionaria $ln(X_t)$ (lnserie)
+
+Se elimina el coeficiente `intercept`, estimando el modelo con la serie original en logaritmos (sin aplicar ninguna diferenciación).
+
+```{r echo = FALSE}
+mod1B = arima(lnserie, order = c(0,1,1), seasonal = list(order = c(0,1,1), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 1b \nT-ratios:",round(mod1B$coef/sqrt(diag(mod1B$var.coef)),2))
+```
+Todos los coeficientes son estadísticamente significativos, no es necesario eliminar nada más. Se calcula el AIC de los modelos con y sin `intercept` para saber cuál de ellos tiene un valor menor de esta medida.
+
+| Modelo    | AIC             |
+|-----------|-----------------|
+| Con `intercept` | `r AIC(mod1A)`  |
+| Sin `intercept` | `r AIC(mod1B)` |
+
+Es mejor el modelo con `intercept`, aunque la diferencia entre ambos modelos es muy pequeña.
+
+\medskip
+
+### Modelo 2A, AR(3)SMA(1)$_{12}$
+
+Se impone a la serie estacional  `d1d12lnserie` el modelo identificado: ARIMA(3, 0, 0)(0, 0, 1)$_{12}$
+
+```{r echo = FALSE}
+mod2A = arima(d1d12lnserie, order = c(3,0,0), seasonal = list(order = c(0,0,1), period=12))
+```
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 2a \nT-ratios:",round(mod2A$coef/sqrt(diag(mod2A$var.coef)),2))
+```
+El T-ratio del `intercept` y el `ar3` es menor a 2. Se empieza eliminando el `intercept`. 
+
+\medskip
+
+### Modelo 2B, usando la serie no-estacionaria $ln(X_t)$ (lnserie)
+
+Se elimina el coeficiente `intercept`, estimando el modelo con la serie original en logaritmos (sin ninguna diferenciación).
+
+```{r echo = FALSE}
+mod2B = arima(lnserie, order = c(3,1,0), seasonal = list(order = c(0,1,1), period=12))
+```
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 2b \nT-ratios:",round(mod2B$coef/sqrt(diag(mod2B$var.coef)),2))
+```
+El T-ratio del coeficiente `ar3` es inferior a 2 en valor absoluto, así que se elimina dicho coeficiente usando la función `fixed` para comprobar si mejora el modelo. Se calcula el AIC para el modelo con y sin `intercept` y con el coeficiente `ar3` y sin éste.
+
+```{r echo = FALSE}
+mod1B2 = arima(lnserie,  order = c(3, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12),  fixed = c(NA, NA, 0, NA))
+```
+
+
+| Modelo    | AIC             |
+|-----------|-----------------|
+| Con `intercept` y `ar3` | `r AIC(mod2A)`  |
+| Sin `intercept` y con `ar3` | `r AIC(mod2B)`  |
+| Sin `intercept` ni `ar3` | `r AIC(mod1B2)` |
+
+El AIC disminuye al eliminar el `intercept` y el coeficiente de `ar3`, así que es mejor quedarse con el modelo más parsimonioso.
+
+\medskip
+
+### Modelo 3A, ARMA(1, 1)SMA(1)$_{12}$
+
+Se impone a la serie estacional `d1d12lnserie`el modelo identificado: ARIMA(1, 0, 1)(0, 0, 1)$_{12}$
+
+```{r echo = FALSE}
+mod3A = arima(d1d12lnserie, order = c(1,0,1), seasonal = list(order = c(0,0,1), period=12))
+```
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+```{r echo = FALSE}
+cat("Modelo 3a \nT-ratios:",round(mod3A$coef/sqrt(diag(mod3A$var.coef)),2))
+```
+El T-ratio del `intercept` es menor a 2, así que se plantea el modelo sin este coeficiente.
+
+\medskip
+
+### Modelo 3B, usando la serie no-estacionaria $ln(X_t)$ (lnserie)
+
+```{r echo = FALSE}
+mod3B = arima(lnserie, order = c(1,1,1), seasonal = list(order = c(0,1,1), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 3b \nT-ratios:",round(mod3B$coef/sqrt(diag(mod3B$var.coef)),2))
+```
+No es necesario eliminar nada más. Se calcula el AIC de los modelos con y sin `intercept`, para saber cuál de ellos tiene un menor valor de esta medida.
+
+| Modelo    | AIC             |
+|-----------|-----------------|
+| Con `intercept` | `r AIC(mod3A)`  |
+| Sin `intercept` | `r AIC(mod3B)` |
+
+En este caso, es mejor el modelo sin `intercept`, pues su AIC es menor.
+
+\medskip
+
+### Tabla resumen
+
+
+Se realiza una tabla resumen para los tres modelos definitivos con el objetivo de poder ver de forma más clara la comparación entre ellos.
+
+\medskip
+
+```{r echo = FALSE}
+#install.packages("stargazer")
+library("stargazer")
+stargazer(mod1A, mod1B2, mod3B, title="Results", type="text", notes.append = FALSE, report = "vtc",
+notes = c("t = T-statistic value = coeff/SE(coeff)"), digits = 3,  column.labels = c("1A","2B2","3B"))
+```
+
+\medskip
+
+En la tabla anterior se observan las estimaciones y los T-ratios de los coeficientes de los 3 modelos estimados. Antes de proceder a la explicación, se recuerda a que hace referencia cada uno de ellos: 
+
+- Modelo 1: $MA(1)SMA(1)_{12}$ 
+- Modelo 2: $AR(3)SMA(1)_{12}$
+- Modelo 3: $ARMA(1, 1)SMA(1)_{12}$
+- Modelos A: estimación con la serie estacionaria
+- Modelos B: estimación con la serie NO estacionaria
+
+Como se deseaba, todos los T-ratios son mayores de 2, excepto los que hacen refererencia al `intercept` de la serie estacionaria. Se concluye que todos los coeficientes son necesarios para explicar los datos. 
+
+Observando el críterio del AIC, se puede decir que los mejores modelos son aquellos que tienen un valor menor en esta medida de calidad relativa. Así pues, a partir de ahora, solo se seguirán estudiando los modelos 2B2 y 3B, ya que son estos los que tienen un valor más negativo.
+
+\medskip
+
+# Validación de los modelos ajustados
+
+Como se ha comentado anteriormente, solo se va a comprobar la validación de 2 de los 6 modelos propuestos. En caso que esta no se cumpla, se seleccionarán otros modelos y se repetirá el proceso que se verá a continuación. Pero, *¿Qué necesita un modelo para ser validado?*
+
+- Los residuos tienen que tener varianza constante y ser normales e independientes
+- En el ACF y PACF de los residuos se tiene que observar que estos se distribuyen como un `Ruido Blanco`. 
+- El modelo debe de ser causal e invertible
+
+```{r echo = FALSE}
+validation_grafic <- function(model, dades){
+  
+s = frequency(get(model$series))
+resid = model$residuals
+par(mfrow = c(2, 2), mar = c(3, 3, 3, 3))
+
+#Residuals plot
+par(mfrow=c(1,2))
+plot(resid, main = "Residuals")
+abline(h = 0)
+abline(h = c(-3*sd(resid, na.rm = T), 3*sd(resid, na.rm = T)), lty = 3, col = 4)
+
+#Square Root of absolute values of residuals (Homocedasticity)
+scatter.smooth(sqrt(abs(resid)), main = "Square Root of Absolute residuals",
+lpars = list(col = 2))
+
+#Normal plot of residuals
+par(mfrow=c(1,2))
+qqnorm(resid)
+qqline(resid, col = 2, lwd = 2)
+
+#Histogram of residuals with normal curve
+hist(resid, breaks = 20, freq = F)
+curve(dnorm(x, mean = mean(resid, na.rm = T), sd = sd(resid, na.rm = T)), col = 2, add = T)
+}
+```
+
+```{r echo = FALSE}
+validation_test_homoce <- function(model, dades){
+
+suppressMessages(require(lmtest, quietly = TRUE, warn.conflicts = FALSE))
+
+##Breusch-Pagan test (vs. order)
+obs = get(model$series)
+print(bptest(resid(model)~I(1:length(resid(model)))))
+
+##Breusch-Pagan test (vs. predictions)
+obs = get(model$series)
+print(bptest(resid(model)~I(obs-resid(model))))
+}
+```
+
+```{r echo = FALSE}
+validation_test_normal <- function(model, dades){
+  
+##Shapiro-Wilks Normality test
+print(shapiro.test(resid(model)))
+suppressMessages(require(nortest, quietly = TRUE, warn.conflicts = FALSE))
+
+##Anderson-Darling test
+print(ad.test(resid(model)))
+suppressMessages(require(tseries, quietly = TRUE, warn.conflicts = FALSE))
+
+##Jarque-Bera test
+print(jarque.bera.test(na.omit(c(resid(model)))))
+}
+```
+
+```{r echo = FALSE}
+validation_test_indepen <- function(model, dades){
+s = frequency(get(model$series))
+resid = model$residuals
+ 
+##Durbin-Watson test
+print(dwtest(resid(model)~I(1:length(resid(model)))))
+
+##Ljung-Box test
+cat("\nLjung-Box test\n")
+print(t(apply(matrix(c(1:4, (1:4)*s)), 1, function(el) {
+te = Box.test(resid(model), type = "Ljung-Box", lag = el)
+c(lag = (te$parameter), statistic = te$statistic[[1]], p.value = te$p.value)})))
+}
+```
+
+
+```{r echo = FALSE}
+validation_acf_pacf <- function(model, dades){
+  s = frequency(get(model$series))
+  resid = model$residuals
+  #ACF & PACF of residuals
+  par(mfrow=c(1,2))
+  acf(resid,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,s-1)),lwd=1)
+  pacf(resid,ylim=c(-1,1),lag.max=60,col=c(rep(1,s-1),2),lwd=1)
+  par(mfrow=c(1,1))
+  
+  #ACF & PACF of square residuals 
+  par(mfrow=c(1,2))
+  acf(resid^2,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,s-1)),lwd=1)
+  pacf(resid^2,ylim=c(-1,1),lag.max=60,col=c(rep(1,s-1),2),lwd=1)
+  par(mfrow=c(1,1))
+}
+```
+
+
+## Validación modelo 2B2
+
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(7, 2)}
+model = mod1B2         
+validation_grafic(model)
+```
+**Residuals:** Los residuos parecen aleatorios y la mayoría se encuentran dentro de las bandas de confianza, centrados en 0.
+
+**Square Root of Absolute residuals:** La línea roja no es nada constante, de manera que la varianza tampoco lo es.
+
+**Normal QQ-Plot:** Hay algunos valores atípicos en las colas.
+
+**Histogram of resid:** Hay algún valor outlier y los datos tienen kurtosis, de manera que no se ajustan bien del todo a una distribución Normal. La kurtosis puede ser debida a la presencia de outliers.
+
+*Conclusión:* Parece que la varianza no es constante y hay presencia de atípicos en los residuos.
+
+\medskip
+
+A continuación se realiza el test de Breusch-Pagan y se contrastan las siguientes hipótesis:
+
+- $H_0$: Los residuos son homocedasticos
+- $H_1$: Los residuos no son homocedasticos
+
+```{r echo = FALSE, results = 'hide'}
+validation_test_homoce(model)
+```
+Se obtiene un p-valor superior a 0.05, así que se afirma que los residuos son homocedasticos.
+
+\medskip 
+
+A continuación se realizan los tests de Shapiro-Wilk, Anderson-Darling y Jarque Bera y contrastan las siguientes hipótesis:
+
+- $H_0$: Los residuos son normales
+- $H_1$: Los residuos no son normales
+
+```{r echo = FALSE, results = 'hide'}
+validation_test_normal(model)
+```
+Se obtienen p-valores inferiores a 0.05, así que se afirma que los residuos no son normales. Hay que tener en cuenta que los tests de Normalidad son muy sensibles a valores atípicos, de manera que se prestará más atención al gráfico QQ-plot, donde se ha visto que los residuos centrales si cumplen la normalidad pero los pertenecientes a las colas no. 
+
+\medskip
+
+A continuación se contrastan las siguientes hipótesis:
+
+*Durbin-Watson test*
+
+- $H_0$: No hay autocorrelación en los residuos en el retardo k
+- $H_1$: Hay autocorrelación en los residuos en el retardo k
+
+Se obtiene un p-valor superior a 0.05, así que se afirma que no hay autocorrelación en los residuos.
+
+*Ljung-Box test*
+
+- $H_0$: No hay autocorrelación hasta el retardo k
+- $H_1$: Hay autocorrelación hasta el retardo k
+
+```{r echo = FALSE, results = 'hide'}
+validation_test_indepen(model)
+```
+
+Se obtiene un p-valor inferior a 0.05 en el retardo (lag) 36. Tal y como está programada la función significa que entre el retardo 24 y el 36 se obtiene una estructura de autocorrelación, la cual se arrastra en todos los retardos posteriores a este hecho. Cabe destacar que la pérdida de independencia se ha dado en un retardo lejano al origen, por tanto, ésta no es preocupante en la validación de los residuos.
+
+\medskip
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(7, 3)}
+validation_acf_pacf(model)
+```
+
+Con los gráficos ACF y PACF de los residuos se reafirma el resultado del test de Durbin-Watson: No hay autocorrelación en los residuos, ya que todos los retardos se encuentran dentro de las bandas de confianza.
+
+En los gráficos ACF y PACF de los residuos al cuadrado si se observa autocorrelación. Esta puede ser debida a la presencia de atípicos o a la volatilidad. Como se ha comentado anteriormente, en los datos hay presencia de atípicos, por tanto, los retardos que se encuentran fuera pueden ser fruto del azar u outliers.
+
+\medskip
+
+## Validación modelo 3B
+```{r echo = FALSE, fig.align='center', fig.dim = c(7, 2)}
+model = mod3B         
+validation_grafic(model)
+```
+**Residuals:** Los residuos parecen aleatorios y la mayoría se encuentran dentro de las bandas de confianza, centrados en 0.
+
+**Square Root of Absolute residuals:** La línea roja no es nada constante, de manera que la varianza tampoco lo es.
+
+**Normal QQ-Plot:** Hay algunos valores atípicos en las colas, sobretodo en la cola izquierda.
+
+**Histogram of resid:** Hay algún valor outlier, sobretodo en la cola izquierda. La parte central tampoco ajusta bien una distribución Normal, pues los datos están desplazados hacia la izquierda.
+
+*Conclusión:* Parece que la varianza no es constante y hay presencia de atípicos en los residuos.
+
+\medskip
+
+A continuación se realiza el test de Breusch-Pagan y se contrastan las siguientes hipótesis:
+
+- $H_0$: Los residuos son homocedasticos
+- $H_1$: Los residuos no son homocedasticos
+
+```{r echo = FALSE, results = 'hide'}
+validation_test_homoce(model)
+```
+Se obtiene un p-valor superior a 0.05, así que se afirma que los residuos son homocedasticos.
+
+\medskip 
+
+A continuación se realizan los tests de Shapiro-Wilk, Anderson-Darlin y Jarque Bera y se contrastan las siguientes hipótesis:
+
+- $H_0$: Los residuos son normales
+- $H_1$: Los residuos no son normales
+
+```{r echo = FALSE, results = 'hide'}
+validation_test_normal(model)
+```
+Se obtienen p-valores inferiores a 0.05, así que se afirma que los residuos no son normales. Hay que tener en cuenta que los tests de Normalidad son muy sensibles a valores atípicos, de manera que se prestará más atención al gráfico QQ-plot, donde se ha visto que los residuos centrales si cumplen la normalidad pero los pertenecientes a las colas no. 
+
+\medskip
+
+A continuación se contrastan las siguientes hipótesis:
+
+*Durbin-Watson test*
+
+- $H_0$: No hay autocorrelación en los residuos en el retardo k
+- $H_1$: Hay autocorrelación en los residuos en el retardo k
+
+Se obtiene un p-valor superior a 0.05, así que se afirma que no hay autocorrelación en los residuos.
+
+*Ljung-Box test*
+
+- $H_0$: No hay autocorrelación hasta el retardo k
+- $H_1$: Hay autocorrelación hasta el retardo k
+
+```{r echo = FALSE, results = 'hide'}
+validation_test_indepen(model)
+```
+
+Se obtiene un p-valor inferior a 0.05 en el retardo (lag) 36. Tal y como está programada la función significa que entre el retardo 24 y el 36 se obtiene una estructura de autocorrelación, la cual se arrastra en todos los retardos posteriores a este hecho. Cabe destacar que la pérdida de independencia se ha dado en un retardo lejano al origen, por tanto, ésta no es preocupante en la validación de los residuos.
+
+>
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(7, 3)}
+validation_acf_pacf(model)
+```
+
+Con los gráficos ACF y PACF de los residuos se reafirma el resultado del test de Durbin-Watson: No hay autocorrelación en los residuos, ya que casi todos los retardos se encuentran dentro de las bandas de confianza.
+
+En los gráficos ACF y PACF de los residuos al cuadrado tampoco se observa autocorrelación. Así pues, se puede afirmar que no hay presencia de outliers ni hay volatilidad.
+
+>
+
+>
+
+# Predicción de modelos ARIMA ajustados y validados
+
+```{r echo = FALSE}
+ultim = c(2018,12)                       #Dic 2018
+
+serie1 = window(serie, end = ultim + c(1,0))  #complete series: 2009-2019
+lnserie1 = log(serie1)                   #log transformed    
+serie2 = window(serie, end = ultim)         #series without last year obsrvations: 2009-2018
+lnserie2 = log(serie2)                   #log transformed
+```
+
+## Modelo 2B2
+
+### Verificación estabilidad del modelo
+
+Se deja fuera el último año y se crea de nuevo el modelo. Si el modelo es estable, los coeficientes estimados obtenidos con la serie completa y con la serie incompleta son parecidos. Parecidos significa: coeficientes de la misma magnitud, con mismo signo y misma significancia.
+
+
+```{r echo = FALSE}
+# Fit the model to the complete series: lnserie1
+(mod1B2 = arima(lnserie1,  order = c(3, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12),  fixed = c(NA, NA, 0, NA)))
+
+#Fit the model to the subset series (without 2019 data): lnserie2
+(mod1B22 = arima(lnserie2,  order = c(3, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12),  fixed = c(NA, NA, 0, NA)))
+```
+El modelo es estable pues se cumplen las 3 condiciones establecidas.
+
+\medskip
+
+### Predicción out-of-sample y cálculo RMSPE/MAPE
+
+A continuación se grafica la serie completa (sin dejar el último año fuera) y se hace una predicción del último año para ver si el modelo estima correctamente los datos.
+```{r echo = FALSE, fig.dim = c(5.25, 2.85), fig.align='center'}
+pred = predict(mod1B22, n.ahead=12)                              #outputs point predictions and corresponding standard errors:for year 2019
+pr <- ts(c(tail(lnserie2,1),pred$pred),start = ultim, freq=12)  #point predictions
+
+se <- ts(c(0,pred$se), start = ultim, freq=12)                   #Standard errors for point predictions
+
+#Prediction Intervals (back transformed to original scale using exp-function)
+tl <- ts(exp(pr-1.96*se), start = ultim, freq = 12)
+tu <- ts(exp(pr+1.96*se), start = ultim, freq = 12)
+pr <- ts(exp(pr), start = ultim, freq = 12)             #predictions in original scale
+
+#Plot of the original airbcn series (thousands) and out-of-sample predictions: only time window 2015-2019 shown
+ts.plot(serie,tl,tu,pr,lty=c(1,2,2,1),col=c(1,4,4,2),xlim=ultim[1]+c(-3,+2),type="o",main="Model ARIMA(3,0,0)(0,0,1)_{12}")
+abline(v=(ultim[1]-3):(ultim[1]+2),lty=3,col=4)
+```
+El modelo propuesto estima de manera bastante precisa los datos (estimación en color rojo). Además, los datos reales se encuentran dentro de las bandas de confianza (estimaciones en color azul). 
+
+\medskip
+
+**Cálculo de medidas RMSPE/MAPE y mean Length**
+```{r echo = FALSE}
+obs=window(serie,start=ultim)
+
+mod.EQM1=sqrt(sum(((obs-pr)/obs)^2)/12)   # Error = obs - pred
+mod.EAM1=sum(abs(obs-pr)/obs)/12
+mod.ML1=sum(tu-tl)/12
+```
+
+| Medida | Valor |
+|-----|--------------|
+| EQM | `r mod.EQM1` |
+| EAM | `r mod.EAM1` |
+
+
+\medskip
+
+## Modelo 3B
+
+### Verificación estabilidad del modelo
+
+Para comprobar si el modelo es estable se usa el mismo criterio explicado en el modelo 2B2.
+
+```{r echo = FALSE}
+# Fit the model to the complete series: lnserie1
+(mod3B = arima(lnserie1, order = c(1,1,1), seasonal = list(order = c(0,1,1), period=12)))
+
+#Fit the model to the subset series (without 2019 data): lnserie2
+(mod3B2 = arima(lnserie2, order = c(1,1,1), seasonal = list(order = c(0,1,1), period=12)))
+```
+El modelo es estable pues se cumplen las 3 condiciones establecidas.
+
+>
+
+### Predicción out-of-sample y cálculo RMSPE/MAPE
+
+A continuación se grafica la serie completa (sin dejar el último año fuera) y se hace una predicción del último año para ver si el modelo estima correctamente los datos.
+
+```{r echo = FALSE, fig.dim = c(5.5, 3), fig.align='center'}
+pred = predict(mod3B2, n.ahead=12)                              #outputs point predictions and corresponding standard errors:for year 2019
+pr <- ts(c(tail(lnserie2,1),pred$pred),start = ultim, freq=12)  #point predictions
+
+se <- ts(c(0,pred$se), start = ultim, freq=12)                   #Standard errors for point predictions
+
+#Prediction Intervals (back transformed to original scale using exp-function)
+tl <- ts(exp(pr-1.96*se), start = ultim, freq = 12)
+tu <- ts(exp(pr+1.96*se), start = ultim, freq = 12)
+pr <- ts(exp(pr), start = ultim, freq = 12)             #predictions in original scale
+
+#Plot of the original airbcn series (thousands) and out-of-sample predictions: only time window 2015-2019 shown
+ts.plot(serie,tl,tu,pr,lty=c(1,2,2,1),col=c(1,4,4,2),xlim=ultim[1]+c(-3,+2),type="o",main="Model ARIMA(1,0,1)(0,0,1)_{12}")
+abline(v=(ultim[1]-3):(ultim[1]+2),lty=3,col=4)
+```
+
+Igual que en el modelo 2B2, la estimación es muy cercana a los valores reales.
+
+\pagebreak
+
+**Cálculo de medidas RMSPE/MAPE y mean Length**
+```{r echo = FALSE}
+obs=window(serie,start=ultim)
+mod.EQM2=sqrt(sum(((obs-pr)/obs)^2)/12)   # Error = obs - pred
+mod.EAM2=sum(abs(obs-pr)/obs)/12
+mod.ML2=sum(tu-tl)/12
+```
+
+
+| Medida | Valor |
+|-----|--------------|
+| EQM | `r mod.EQM2` |
+| EAM | `r mod.EAM2` |
+
+>
+
+# Selección del mejor modelo 
+
+Una vez vistas las validaciones de los modelos y el análisis de sus capacidades predictivas, se debe elegir un solo modelo con el que se llevará a cabo el objetivo principal del presente estudio, la realización de la predicción a largo plazo. 
+
+Así pues, en este punto del estudio, es necesario comparar las medidas de adecuación a los datos (AIC) y sus capacidades de predicción, dando más importancia a estas últimas, con el fin de seleccionar un solo modelo, el mejor entre los dos propuestos. 
+
+Para ello, se realiza una tabla con los valores más importantes a tener en cuenta. 
+
+
+```{r echo = FALSE}
+selection=function(model){
+ s=frequency(get(model$series))
+  resid=model$residuals
+  par(mfrow=c(2,2),mar=c(3,3,3,3))
+
+resumen<-data.frame(Pruebas=1:5)
+colnames(resumen)<-paste0("mod1B")
+rownames(resumen)<-c("Log Likelihood","AIC","RMSPE", "MAPE","Mean Length")
+        
+  resumen[1,1]=model$loglik
+  resumen[2,1]=model$aic
+  resumen[3,1]=NA
+  resumen[4,1]=NA
+  resumen[5,1]=NA
+  return(resumen)
+}
+```
+
+```{r echo = FALSE}
+model = mod1B2
+resumen1 <- selection(model)
+colnames(resumen1) <- c("mod2B2")
+resumen1[3,1] = mod.EQM1
+resumen1[4,1] = mod.EAM1
+resumen1[5,1] = mod.ML1 
+
+model = mod3B
+resumen2 <- selection(model)
+colnames(resumen2) <- c("mod3B")
+resumen2[3,1] = mod.EQM2
+resumen2[4,1] = mod.EAM2
+resumen2[5,1] = mod.ML2
+
+
+tablef<-cbind.data.frame(resumen1,resumen2)
+stargazer(tablef, summary=FALSE, type="text")
+```
+
+En cuanto a la medida de adecuación a los datos, se observa que el modelo 3B es preferible al 2B2, ya que éste tiene un AIC menor. Por contra, la capacidad predictiva es ligeramente mejor en el modelo 2B2, ya que aquí el error es de 7% en el caso del EQM y un 5.7% en EAM, mientras que el modelo 3B tiene un error del 8% en el EQM y uno del 6.7% en el caso del EAM. Aún así cabe destacar que ambos modelos tienen un error en la capacidad predictiva inferior al 10%, por lo que se concluye que los dos son buenos modelos para predecir los datos estudiados. Además, existe otra medida comparable entre modelos: la amplitud de la predicción. Este valor, interesa que sea pequeño, pues querrá decir que el intervalo de confianza de los valores predichos estará más acotado, será más estrecho. Observando la tabla anterior, se puede decir que el modelo 3B tiene una amplitud de predicción bastante menor que la del modelo 2B2. 
+
+Así pues, después de toda esta explicación, se concluye que el mejor modelo para realizar la predicción a largo plazo es el modelo 3B, ya que es el que tiene menor AIC y menor amplitud de predicción. Además, el error no presenta casi diferencias entre ambos modelos. 
+
+Antes de pasar a realizar la predicción, es necesario recordar la expresión del modelo elegido. Esta era la siguiente: $ARMA(1, 1)SMA(1)_{12}$.
+
+\medskip 
+
+### Realización predicción a largo plazo
+
+Una vez seleccionado el mejor modelo, se procede a realizar la predicción. Para llevarla a cabo, se cogen los valores de la serie completa y se estima el número de viajeros en turismo rural que hubiera habido en el año 2020 si no hubiera existido la pandemia del Covid-19. 
+
+```{r echo = FALSE, fig.align='center'}
+##### Previsions a llarg termini amb el model complet ######
+
+pred=predict(mod3B,n.ahead=12)
+pr<-ts(c(tail(lnserie,1),pred$pred),start=ultim+c(1,0),freq=12) #starts Dec 2019!
+se<-ts(c(0,pred$se),start=ultim+c(1,0),freq=12)
+
+#Intervals
+tl1<-ts(exp(pr-1.96*se),start=ultim+c(1,0),freq=12)
+tu1<-ts(exp(pr+1.96*se),start=ultim+c(1,0),freq=12)
+pr1<-ts(exp(pr),start=ultim+c(1,0),freq=12)
+
+ts.plot(serie,tl1,tu1,pr1,lty=c(1,2,2,1),col=c(1,4,4,2),xlim=c(ultim[1]-3,ultim[1]+3),type="o",main="Model ARIMA(1,1,1)(0,1,1)_12")
+abline(v=(ultim[1]-3):(ultim[1]+3),lty=3,col=4)
+```
+Se observa que la predicción en un tiempo extrapolable al de los datos sigue la misma tendencia lineal creciente y el mismo patrón que lo visto hasta el momento. 
+
+Por tanto, gracias a la predicción observada, se puede decir que ya se ha cumplido el objetivo principal del estudio. 
+
+\pagebreak
+
+# Conclusiones
+
+Después de realizar las evaluaciones correspondientes y utilizar los métodos ya conocidos y mencionados con anterioridad, se concluye que la serie temporal correspondiente al número de viajeros españoles en alojamientos de turismo rural se puede explicar como un modelo $ARMA(1, 1)SMA(1)_{12}$.
+
+Para llegar a esta conclusión ha sido necesario transformar la serie original con el fin de convertirla en una serie estacionaria. Para ello, se ha debido de aplicar una transformación logarítmica y hacer una diferenciación regular y otra estacional. Una vez conseguida la serie en el formato deseado, se han identificado 3 posibles modelos que podrían encajar con los datos estudiados, aunque uno de ellos ha sido descartado por tener una medida de adecuación a los datos bastante inferior en comparación al resto de opciones. Así pues, a los dos modelos resultantes, se les ha hecho una validación, se ha verificado su estabilidad y se ha observado su capacidad predictiva.  A partir de los resultados obtenidos, se ha seleccionado un solo modelo, el mejor de ellos, el cual ha resultado ser un $ARMA(1, 1)SMA(1)_{12}$. Este modelo tenía un AIC igual a -198, un error de predicción de 8% y 6.7%  en los casos de EQM y EAM, respectivamente y una amplitud de predicción de 172. 
+
+Finalmente y a partir del modelo seleccionado, se ha llevado a cabo el objetivo principal del estudio: hacer una predicción para el número de viajeros en turismo rural que hubiera habido en el año 2020 si no hubiera existido la pandemia del Covid-19. En este supuesto, se hubiera esperado la misma tendencia lineal creciente y el mismo patrón mensual que lo visto hasta el momento. 
+
+\pagebreak
+
+# Anexo
+
+```{r eval = FALSE, fig.align = 'center', fig.dim=c(5.5, 2.9)}
+serie = window(ts(read.table("datos.txt", header = F)/1000, start = 2009, freq = 12), 
+               start = 2009)
+plot(serie, main = "Ocupacion en alojamientos de turismo rural en España")
+abline(v = 2009:2019, col = 4, lty = 3)
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(7, 2.9)}
+par(mfrow=c(1,2))
+
+m = apply(matrix(serie,ncol=12),2,mean)
+v = apply(matrix(serie,ncol=12),2,var)
+plot(v~m,main="Mean-Variance plot")
+
+boxplot(serie~floor(time(serie)), main = "Boxplot")
+```
+
+```{r eval = FALSE, fig.dim = c(5.5, 3), fig.align='center'}
+lnserie=log(serie)
+plot(lnserie,type="o")
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(5.5, 3)}
+monthplot(lnserie)
+```
+
+```{r eval = FALSE}
+d12lnserie<-diff(lnserie,lag=12)
+```
+
+```{r eval = FALSE, fig.dim = c(5.5, 2.7), fig.align='center'}
+monthplot(d12lnserie)
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(5.5, 2.7)}
+plot(d12lnserie,main="d12lnserie")
+abline(h=0)
+abline(h=mean(d12lnserie), col=2)
+```
+
+```{r eval = FALSE}
+d1d12lnserie <- diff(d12lnserie)
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(5.5, 2.7)}
+plot(d1d12lnserie,main="d1d12lnserie")
+abline(h=0)
+abline(h=mean(d1d12lnserie), col=2)
+```
+
+```{r eval = FALSE}
+v1 <- var(lnserie)
+v2 <- var(d12lnserie)
+v3 <- var(d1d12lnserie)
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(7, 3)}
+par(mfrow=c(1,2))
+
+acf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,11)),lwd=2)
+pacf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(rep(1,11), 2),lwd=2)
+```
+
+```{r eval = FALSE}
+mod1A = arima(d1d12lnserie, order = c(0,0,1), seasonal = list(order = c(0,0,1), period=12))
+```
+
+```{r eval = FALSE}
+cat("Modelo 1a \n T-ratios:",round(mod1A$coef/sqrt(diag(mod1A$var.coef)),2))
+```
+
+```{r eval = FALSE}
+mod1B = arima(lnserie, order = c(0,1,1), seasonal = list(order = c(0,1,1), period=12))
+```
+
+```{r eval = FALSE}
+cat("Modelo 1b \nT-ratios:",round(mod1B$coef/sqrt(diag(mod1B$var.coef)),2))
+```
+
+```{r eval = FALSE}
+mod2A = arima(d1d12lnserie, order = c(3,0,0), seasonal = list(order = c(0,0,1), period=12))
+```
+
+```{r eval = FALSE}
+cat("Modelo 2a \nT-ratios:",round(mod2A$coef/sqrt(diag(mod2A$var.coef)),2))
+```
+
+```{r eval = FALSE}
+mod2B = arima(lnserie, order = c(3,1,0), seasonal = list(order = c(0,1,1), period=12))
+```
+
+```{r eval = FALSE}
+cat("Modelo 2b \nT-ratios:",round(mod2B$coef/sqrt(diag(mod2B$var.coef)),2))
+```
+
+```{r eval = FALSE}
+mod1B2 = arima(lnserie,  order = c(3, 1, 0), seasonal = list(order = c(0, 1, 1), 
+                                                             period = 12),  
+               fixed = c(NA, NA, 0, NA))
+```
+
+```{r eval = FALSE}
+mod3A = arima(d1d12lnserie, order = c(1,0,1), seasonal = list(order = c(0,0,1), period=12))
+```
+
+```{r eval = FALSE}
+cat("Modelo 3a \nT-ratios:",round(mod3A$coef/sqrt(diag(mod3A$var.coef)),2))
+```
+
+```{r eval = FALSE}
+mod3B = arima(lnserie, order = c(1,1,1), seasonal = list(order = c(0,1,1), period=12))
+```
+
+```{r eval = FALSE}
+cat("Modelo 3b \nT-ratios:",round(mod3B$coef/sqrt(diag(mod3B$var.coef)),2))
+```
+
+```{r eval = FALSE}
+#install.packages("stargazer")
+library("stargazer")
+stargazer(mod1A, mod1B2, mod3B, title="Results", type="text", notes.append = FALSE, 
+          report = "vtc", notes = c("t = T-statistic value = coeff/SE(coeff)"), 
+          digits = 3,  column.labels = c("1A","2B2","3B"))
+```
+
+```{r eval = FALSE}
+validation_grafic <- function(model, dades){
+  
+s = frequency(get(model$series))
+resid = model$residuals
+par(mfrow = c(2, 2), mar = c(3, 3, 3, 3))
+
+#Residuals plot
+plot(resid, main = "Residuals")
+abline(h = 0)
+abline(h = c(-3*sd(resid, na.rm = T), 3*sd(resid, na.rm = T)), lty = 3, col = 4)
+
+#Square Root of absolute values of residuals (Homocedasticity)
+scatter.smooth(sqrt(abs(resid)), main = "Square Root of Absolute residuals",
+lpars = list(col = 2))
+
+#Normal plot of residuals
+qqnorm(resid)
+qqline(resid, col = 2, lwd = 2)
+
+#Histogram of residuals with normal curve
+hist(resid, breaks = 20, freq = F)
+curve(dnorm(x, mean = mean(resid, na.rm = T), sd = sd(resid, na.rm = T)), col = 2, 
+      add = T)
+}
+```
+
+```{r eval = FALSE}
+validation_test_homoce <- function(model, dades){
+
+suppressMessages(require(lmtest, quietly = TRUE, warn.conflicts = FALSE))
+
+##Breusch-Pagan test (vs. order)
+obs = get(model$series)
+print(bptest(resid(model)~I(1:length(resid(model)))))
+
+##Breusch-Pagan test (vs. predictions)
+obs = get(model$series)
+print(bptest(resid(model)~I(obs-resid(model))))
+}
+```
+
+```{r eval = FALSE}
+validation_test_normal <- function(model, dades){
+  
+##Shapiro-Wilks Normality test
+print(shapiro.test(resid(model)))
+suppressMessages(require(nortest, quietly = TRUE, warn.conflicts = FALSE))
+
+##Anderson-Darling test
+print(ad.test(resid(model)))
+suppressMessages(require(tseries, quietly = TRUE, warn.conflicts = FALSE))
+
+##Jarque-Bera test
+print(jarque.bera.test(na.omit(c(resid(model)))))
+}
+```
+
+```{r eval = FALSE}
+validation_test_indepen <- function(model, dades){
+s = frequency(get(model$series))
+resid = model$residuals
+ 
+##Durbin-Watson test
+print(dwtest(resid(model)~I(1:length(resid(model)))))
+
+##Ljung-Box test
+cat("\nLjung-Box test\n")
+print(t(apply(matrix(c(1:4, (1:4)*s)), 1, function(el) {
+te = Box.test(resid(model), type = "Ljung-Box", lag = el)
+c(lag = (te$parameter), statistic = te$statistic[[1]], p.value = te$p.value)})))
+}
+```
+
+```{r eval = FALSE}
+validation_acf_pacf <- function(model, dades){
+  s = frequency(get(model$series))
+  resid = model$residuals
+  #ACF & PACF of residuals
+  par(mfrow=c(1,2))
+  acf(resid,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,s-1)),lwd=1)
+  pacf(resid,ylim=c(-1,1),lag.max=60,col=c(rep(1,s-1),2),lwd=1)
+  par(mfrow=c(1,1))
+  
+  #ACF & PACF of square residuals 
+  par(mfrow=c(1,2))
+  acf(resid^2,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,s-1)),lwd=1)
+  pacf(resid^2,ylim=c(-1,1),lag.max=60,col=c(rep(1,s-1),2),lwd=1)
+  par(mfrow=c(1,1))
+}
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(5, 3.5)}
+model = mod1B2         
+validation_grafic(model)
+```
+
+```{r eval = FALSE}
+validation_test_homoce(model)
+```
+
+```{r eval = FALSE}
+validation_test_normal(model)
+```
+
+```{r eval = FALSE}
+validation_test_indepen(model)
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(7, 3.6)}
+validation_acf_pacf(model)
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(5, 3.5)}
+model = mod3B         
+validation_grafic(model)
+```
+
+```{r eval = FALSE}
+validation_test_homoce(model)
+```
+
+```{r eval = FALSE}
+validation_test_normal(model)
+```
+
+```{r eval = FALSE}
+validation_test_indepen(model)
+```
+
+```{r eval = FALSE, fig.align='center', fig.dim = c(7, 3.6)}
+validation_acf_pacf(model)
+```
+
+```{r eval = FALSE}
+ultim = c(2018,12)                       #Dic 2018
+
+serie1 = window(serie, end = ultim + c(1,0))  #complete series: 2009-2019
+lnserie1 = log(serie1)                   #log transformed    
+serie2 = window(serie, end = ultim)         #series without last year obsrvations: 2009-2018
+lnserie2 = log(serie2)                   #log transformed
+```
+
+```{r eval = FALSE}
+# Fit the model to the complete series: lnserie1
+(mod1B2 = arima(lnserie1,  order = c(3, 1, 0), seasonal = list(order = c(0, 1, 1), 
+                                                               period = 12),  
+                fixed = c(NA, NA, 0, NA)))
+
+#Fit the model to the subset series (without 2019 data): lnserie2
+(mod1B22 = arima(lnserie2,  order = c(3, 1, 0), seasonal = list(order = c(0, 1, 1), 
+                                                                period = 12),  
+                 fixed = c(NA, NA, 0, NA)))
+```
+
+```{r eval = FALSE, fig.dim = c(5.25, 2.85), fig.align='center'}
+pred = predict(mod1B22, n.ahead=12)                              #outputs point predictions and corresponding standard errors:for year 2019
+pr <- ts(c(tail(lnserie2,1),pred$pred),start = ultim, freq=12)  #point predictions
+
+se <- ts(c(0,pred$se), start = ultim, freq=12)                   #Standard errors for point predictions
+
+#Prediction Intervals (back transformed to original scale using exp-function)
+tl <- ts(exp(pr-1.96*se), start = ultim, freq = 12)
+tu <- ts(exp(pr+1.96*se), start = ultim, freq = 12)
+pr <- ts(exp(pr), start = ultim, freq = 12)             #predictions in original scale
+
+#Plot of the original airbcn series (thousands) and out-of-sample predictions: only time window 2015-2019 shown
+ts.plot(serie,tl,tu,pr,lty=c(1,2,2,1),col=c(1,4,4,2),xlim=ultim[1]+c(-3,+2),type="o",
+        main="Model ARIMA(3,0,0)(0,0,1)_{12}")
+abline(v=(ultim[1]-3):(ultim[1]+2),lty=3,col=4)
+```
+
+```{r eval = FALSE}
+obs=window(serie,start=ultim)
+
+mod.EQM1=sqrt(sum(((obs-pr)/obs)^2)/12)   # Error = obs - pred
+mod.EAM1=sum(abs(obs-pr)/obs)/12
+mod.ML1=sum(tu-tl)/12
+```
+
+```{r eval = FALSE}
+# Fit the model to the complete series: lnserie1
+(mod3B = arima(lnserie1, order = c(1,1,1), seasonal = list(order = c(0,1,1), period=12)))
+
+#Fit the model to the subset series (without 2019 data): lnserie2
+(mod3B2 = arima(lnserie2, order = c(1,1,1), seasonal = list(order = c(0,1,1), period=12)))
+```
+
+
+```{r eval = FALSE, fig.dim = c(5.5, 3), fig.align='center'}
+pred = predict(mod3B2, n.ahead=12)                              #outputs point predictions and corresponding standard errors:for year 2019
+pr <- ts(c(tail(lnserie2,1),pred$pred),start = ultim, freq=12)  #point predictions
+
+se <- ts(c(0,pred$se), start = ultim, freq=12)                   #Standard errors for point predictions
+
+#Prediction Intervals (back transformed to original scale using exp-function)
+tl <- ts(exp(pr-1.96*se), start = ultim, freq = 12)
+tu <- ts(exp(pr+1.96*se), start = ultim, freq = 12)
+pr <- ts(exp(pr), start = ultim, freq = 12)             #predictions in original scale
+
+#Plot of the original airbcn series (thousands) and out-of-sample predictions: only time window 2015-2019 shown
+ts.plot(serie,tl,tu,pr,lty=c(1,2,2,1),col=c(1,4,4,2),xlim=ultim[1]+c(-3,+2),type="o",
+        main="Model ARIMA(1,0,1)(0,0,1)_{12}")
+abline(v=(ultim[1]-3):(ultim[1]+2),lty=3,col=4)
+```
+
+```{r eval = FALSE}
+obs=window(serie,start=ultim)
+mod.EQM2=sqrt(sum(((obs-pr)/obs)^2)/12)   # Error = obs - pred
+mod.EAM2=sum(abs(obs-pr)/obs)/12
+mod.ML2=sum(tu-tl)/12
+```
+
+```{r eval = FALSE}
+selection=function(model){
+ s=frequency(get(model$series))
+  resid=model$residuals
+  par(mfrow=c(2,2),mar=c(3,3,3,3))
+
+resumen<-data.frame(Pruebas=1:5)
+colnames(resumen)<-paste0("mod1B")
+rownames(resumen)<-c("Log Likelihood","AIC","RMSPE", "MAPE","Mean Length")
+        
+  resumen[1,1]=model$loglik
+  resumen[2,1]=model$aic
+  resumen[3,1]=NA
+  resumen[4,1]=NA
+  resumen[5,1]=NA
+  return(resumen)
+}
+```
+
+```{r eval = FALSE}
+model = mod1B2
+resumen1 <- selection(model)
+colnames(resumen1) <- c("mod2B2")
+resumen1[3,1] = mod.EQM1
+resumen1[4,1] = mod.EAM1
+resumen1[5,1] = mod.ML1 
+
+model = mod3B
+resumen2 <- selection(model)
+colnames(resumen2) <- c("mod3B")
+resumen2[3,1] = mod.EQM2
+resumen2[4,1] = mod.EAM2
+resumen2[5,1] = mod.ML2
+
+
+tablef<-cbind.data.frame(resumen1,resumen2)
+stargazer(tablef, summary=FALSE, type="text")
+```
+
+```{r eval = FALSE, fig.align='center'}
+##### Previsions a llarg termini amb el model complet ######
+
+pred=predict(mod3B,n.ahead=12)
+pr<-ts(c(tail(lnserie,1),pred$pred),start=ultim+c(1,0),freq=12) #starts Dec 2019!
+se<-ts(c(0,pred$se),start=ultim+c(1,0),freq=12)
+
+#Intervals
+tl1<-ts(exp(pr-1.96*se),start=ultim+c(1,0),freq=12)
+tu1<-ts(exp(pr+1.96*se),start=ultim+c(1,0),freq=12)
+pr1<-ts(exp(pr),start=ultim+c(1,0),freq=12)
+
+ts.plot(serie,tl1,tu1,pr1,lty=c(1,2,2,1),col=c(1,4,4,2),xlim=c(ultim[1]-3,ultim[1]+3),
+        type="o",main="Model ARIMA(1,1,1)(0,1,1)_12")
+abline(v=(ultim[1]-3):(ultim[1]+3),lty=3,col=4)
+```
+
+
+
+

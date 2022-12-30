@@ -1,0 +1,125 @@
+---
+title: Número de pasajeros en el Puerto de Barcelona (2012-2019)
+author:
+- Garcia Sató, Pol
+- Nualart Sanz, Arnau
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+    theme: united
+    highlight: tango
+  word_document:
+    toc: yes
+  pdf_document:
+    fig_caption: yes
+    number_sections: yes
+    toc_depth: 2
+subtitle: Segona pràctica Anàlisi de Series Temporals
+header-includes:
+- \pagenumbering{gobble}
+- \usepackage{subfig}
+- \usepackage[labelsep=period]{caption}
+- \usepackage[labelfont=bf]{caption}
+- \renewcommand{\and}{\\}
+---
+
+```{=tex}
+\renewcommand{\contentsname}{Índex}
+\renewcommand{\figurename}{Figura}
+\renewcommand{\tablename}{Taula}
+```
+\captionsetup{width=.75\textwidth}
+
+\vspace{120mm}
+
+<left> 
+![](C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/ub.png){width="50%"}
+
+</left> <right> 
+![](C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/upc.png){width="50%"}
+</right>
+
+\newpage
+
+```{=tex}
+\begin{center}
+El objetivo de este informe es ver el comportamiento del número de pasajeros en el puerto de Barcelona durante los años 2012 - 2019 y hacer una predicción para el período 2020 - 2022 si no se tuvieran en cuenta los efectos causados por la pandemia del SARS-CoV-2. 
+
+Se observa que los datos presentan tendencia creciente y estacionalidad multiplicativa. Es decir, con el paso de los años la demanda fue aumentando. Además, hay un claro patrón estacional que muestra que en los meses de verano el número es superior a los meses de otoño e invierno. 
+
+En cuanto a la predicción, la demanda sigue aumentando de manera multiplicativa y siguiendo el mismo patrón estacional. 
+\end{center}
+```
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+# Introducció
+
+## Descripción del entorno y el problema - motivación del trabajo
+
+Desde el estallido de la pandemia del SARS-CoV-2 las preferencias de la población respecto a sus destinos vacacionales parecen haber cambiado. Actualmente, los viajeros están más interesados en lugares naturales, al aire libre, debido a que en la época del confinamiento mucha parte de la población se sintió agobiada dentro de sus hogares. Adicionalmente, los españoles se han centrado en un turismo nacional debido a la situación de crisis sanitaria que estamos viviendo. Así pues, el número de pasajeros en el Puerto de Barcelona puede haber disminuido drásticamente ya que los cruceros son espacios cerrados y suelen ser vacaciones internacionales.
+
+El objetivo principal de este informe es ver cuál era el comportamiento del número de pasajeros en el Puerto de Barcelona, ya sean de cruceros como de ferris, en los años anteriores a la pandemia. De esta manera se podrá ver de manera correcta la tendencia creciente que se tenía antes de la crisis sin tener en cuenta la posible caída debida a la pandemia.
+
+Para la elección de los años analizados, se ha evitado estudiar aquellos momentos temporales en los que había un factor condicionante. Por tanto, los datos tomados dejan fuera la crisis económica del 2008 y la pandemia del 2020. También tendremos en cuenta que a principios del 2012 hubo el desastre de la naviera italiana Costa Concordia con 32 muertos, lo cual hizo que hubiera un descenso significativo en el número de pasajeros en los cruceros del Mediterráneo. Teniendo esto en cuenta, solo se han seleccionado los datos mensuales pertenecientes al espacio temporal comprendido entre 2012 y 2019, ambos períodos incluidos.
+
+\medskip
+
+## Definición precisa de la variable
+
+La variable a estudiar es el número de pasajeros que llegan al Puerto de Barcelona durante el periodo ya comentado anteriormente. Cabe destacar que esta variable recoge tanto el número de llegadas internas (nacionales) como externas (internacionales).
+
+## Descripción de la fuente de información
+
+Los datos han sido extraídos de los casos propuestos del repositorio que precisamos en el CV de la UB. Provienen de la web del Ministerio del Fomento (http://www.fomento.gob.es) en el apartado Ministerio de Fomento / Marítimo / Información Estadística y corresponden al número de pasajeros que llegan al Puerto de Barcelona.
+
+## Resumen de la estructura del trabajo 
+
+El estudio sigue el siguiente esquema:
+
+- _Aplicación empírica_
+
+En este apartado se observan cuáles son las características principales de la serie (media, varianza, tendencia, estacionalidad, residuos,. . . ). Es decir, se analiza descriptivamente la serie para así tener un conocimiento previo de los datos.
+
+- _Metodología de alisado_
+
+A partir del análisis realizado en el apartado anterior se decide qué tipo de serie se ajusta mejor a nuestros datos. A partir de aquí, se hace una predicción para observar cuál sería el número de viajeros en alojamientos rurales en los próximos años si no existiera ningún factor condicionante que actuará como brecha, en el caso expuesto, si no existiera la pandemia del Covid-19. 
+
+\medskip
+
+# Aplicación empírica
+## Análisis descriptivo de la serie
+
+El análisis descriptivo de los datos seleccionados comenzará con una herramienta visual, un gráfico que permitirá observar la distribución de éstos a lo largo de los 8 años estudiados. 
+El gráfico temporal tiene la siguiente forma:
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r echo = FALSE, fig.align = 'center', fig.dim=c(7, 4)}
+serie=window(ts(read.table("pasajebcn.dat"),start=1997,freq=12),start=2009)
+
+plot(serie, main = "Ocupacion en alojamientos de turismo rural en España")
+abline(v = 2009:2019, col = 4, lty = 3)
+```
+
+Como ya se explicó con detalle en la práctica 1, la serie estudiada presenta una tendencia creciente y una estacionalidad multiplicativa de orden s = 12. 
+
+## Identificación del modelo
+### Transformación de la serie temporal en una serie estacionaria
+
+Para poder trabajar con los datos de una forma más estable es necesario que la serie estudiada sea estacionaria. ¿Qué requisitos tiene que cumplir para conseguirlo? Varianza constante, que no exista la componente estacional y que presente media constante. Se procede a estudiar dichos aspectos:
+
+
+

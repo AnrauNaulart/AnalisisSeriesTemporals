@@ -1,5 +1,5 @@
 ---
-title: "Número de passajeros en el puerto de Barcelona (2012-2019)"
+title: "Número de pasajeros en el puerto de Barcelona (2012-2019)"
 author: "Arnau Nualart i Pol Garcia"
 date: "8/11/2022"
 output:

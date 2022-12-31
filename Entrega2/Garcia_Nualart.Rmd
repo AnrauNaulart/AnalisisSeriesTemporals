@@ -53,6 +53,7 @@ Se observa que los datos presentan tendencia creciente y estacionalidad multipli
 En cuanto a la predicción, la demanda sigue aumentando de manera multiplicativa y siguiendo el mismo patrón estacional. 
 \end{center}
 ```
+ 
 \pagebreak
 
 \tableofcontents
@@ -119,7 +120,114 @@ Como ya se explicó con detalle en la práctica 1, la serie estudiada presenta u
 ## Identificación del modelo
 ### Transformación de la serie temporal en una serie estacionaria
 
-Para poder trabajar con los datos de una forma más estable es necesario que la serie estudiada sea estacionaria. ¿Qué requisitos tiene que cumplir para conseguirlo? Varianza constante, que no exista la componente estacional y que presente media constante. Se procede a estudiar dichos aspectos:
+Para que la serie estudiada sea estacionaria estudiaremos que la varianza sea constante, que no exista componente estacional y que presente una media constante.
+
+**Varianza constante**
+
+Se dispone de dos soportes gráficos que permiten ver si la varianza de la serie es constante o no: *Gráfico medias vs varianzas* y *Boxplot por periodos*. 
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(7, 2.9)}
+par(mfrow=c(1,2))
+
+m = apply(matrix(serie,ncol=12),2,mean)
+v = apply(matrix(serie,ncol=12),2,var)
+plot(v~m,main="Mean-Variance plot")
+
+boxplot(serie~floor(time(serie)), main = "Boxplot")
+```
+
+En el primer gráfico podemos observar que, a medida que aumenta la media,  también lo hace la varianza. Lo mismo podemos decir en el segundo gráfico boxplot, donde el rango intercuartílico aumenta al mismo paso que aumenta el nivel de la serie.
+
+Entonces podemos concluir que la varianza de la serie no es constante. Para que lo sea, usaremos una transformación logarítmica graficando de nuevo los datos.
+
+```{r echo = FALSE, fig.dim = c(5.5, 3), fig.align='center'}
+lnserie=log(serie)
+plot(lnserie,type="o")
+```
+
+Ahora sí podríamos decir que la varianza de la serie se ha estabilizado al aplicar la transformación logaritmica. 
+
+\medskip
+
+**Patrón estacional**
+
+Para saber si existe patrón estacional usaremos la función `monthplot`, que calcula la media en cada orden estacional. En nuestro caso, mensualmente.
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(5.5, 3)}
+monthplot(lnserie)
+```
+
+Vemos claramente que hay irregularidades en la media para cada mes, ya que no hay equilibrio en sus líneas horizonales. Por lo que podemos decir que la serie presenta un patrón estacional de orden s=12, como se ha dicho anteriormente. Para poder eliminarlo, se realiza una diferenciación estacional (D = 1), es decir, se restan las observaciones del patrón estacional anterior. Por tanto, se eliminarán S = 12 observaciones, las 12 primeras. 
+
+```{r echo = FALSE}
+d12lnserie<-diff(lnserie,lag=12)
+```
+
+Volvemos a utilizar la función `monthplot` sobre la serie diferenciada estacionalmente para comprobar que se haya eliminado el patrón estacional.
+
+```{r echo = FALSE, fig.dim = c(5.5, 2.7), fig.align='center'}
+monthplot(d12lnserie)
+```
+
+Vemos que, efectivamente, se han estabilizado las medias de cada mes, por lo que podemos afirmar que hemos eliminado el patrón estacional.
+
+\medskip
+
+**Media constante**
+
+Se obtiene el gráfico temporal de la serie en escala logarítmica y con una diferenciación estacional. 
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(5.5, 2.7)}
+plot(d12lnserie,main="d12lnserie")
+abline(h=0)
+abline(h=mean(d12lnserie), col=2)
+```
+
+La media de la serie si parece constante pero se observa que la media no toma el valor 0. Por acuerdo académico no se trabajará con medias distintas a 0. Así pues, para cumplir el acuerdo, se hace una diferenciación regular (d = 1). Para verificar que la media de la serie toma el valor 0 se vuelve a graficar la serie temporal una vez aplicada dicha diferenciación. 
+
+```{r echo = FALSE}
+d1d12lnserie <- diff(d12lnserie)
+```
 
 
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(5.5, 2.7)}
+plot(d1d12lnserie,main="d1d12lnserie")
+abline(h=0)
+abline(h=mean(d1d12lnserie), col=2)
+```
+La media de la serie ahora si toma el valor 0. Para assegurar que la serie no presenta sobrediferenciación se comparan las varianzas. La mejor serie será aquella que tenga una menor varianza. 
+
+```{r echo = FALSE}
+v1 <- var(lnserie)
+v2 <- var(d12lnserie)
+v3 <- var(d1d12lnserie)
+```
+
+| Modelo   | lnserie | d12lnserie | d1d12lnserie |
+|----------|---------|------------|--------------|
+| Varianza | `r v1`  | `r v2`     | `r v3`       |
+
+Se observa que la serie con menor varianza es aquella que presenta escala logarítmica y una diferenciación estacional. Por tanto, significa que la diferenciación regular no es necesaria. Aún así, ésta se mantendrá por el motivo expuesto anteriormente, para conseguir que la media tome el valor 0. 
+
+>
+
+### Identificación de modelos pausibles
+
+Para identificar algunos modelos se grafican el ACF y el PACF de la serie estacionaria. 
+
+Cabe destacar que primeramente se seleccionarán los modelos más parsimoniosos. Si en el apartado de *validación* no se valida ninguno de ellos, se volverá al presente apartado para proponer otros modelos más complejos. 
+
+Para una mejor identificación, en el siguiente gráfico se muestra en color rojo los "s" rezagos estacionales de la función (P)ACF. En negro, todos los rezagos regulares. 
+
+```{r echo = FALSE, fig.align='center', fig.dim = c(7, 3)}
+par(mfrow=c(1,2))
+
+acf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,11)),lwd=2)
+pacf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(rep(1,11), 2),lwd=2)
+```
+
+Antes de la proposición de modelos, cabe especificar que se confirma que se ha llegado a la serie estacionaria ya que los valores de la ACF decaen de manera rápida hacia el 0. 
+
+\medskip
 

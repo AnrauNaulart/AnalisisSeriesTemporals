@@ -183,20 +183,18 @@ abline(h=0)
 abline(h=mean(d12lnserie), col=2)
 ```
 
-La media de la serie si parece constante pero se observa que la media no toma el valor 0. Por acuerdo académico no se trabajará con medias distintas a 0. Así pues, para cumplir el acuerdo, se hace una diferenciación regular (d = 1). Para verificar que la media de la serie toma el valor 0 se vuelve a graficar la serie temporal una vez aplicada dicha diferenciación. 
+Podemos ver que la media de la serie parece constante pero no llega al valor nulo deseado. Por ello, haremos una diferenciación regular (d=1) y volveremos a graficar la serie para verificar que es 0.
 
 ```{r echo = FALSE}
 d1d12lnserie <- diff(d12lnserie)
 ```
-
-
 
 ```{r echo = FALSE, fig.align='center', fig.dim = c(5.5, 2.7)}
 plot(d1d12lnserie,main="d1d12lnserie")
 abline(h=0)
 abline(h=mean(d1d12lnserie), col=2)
 ```
-La media de la serie ahora si toma el valor 0. Para assegurar que la serie no presenta sobrediferenciación se comparan las varianzas. La mejor serie será aquella que tenga una menor varianza. 
+Ahora podemos ver como la media sí tiene valor nulo pero para comprobar que la serie no presenta sobrediferenciación compararemos las varianzas de las tres transformaciones.
 
 ```{r echo = FALSE}
 v1 <- var(lnserie)
@@ -208,17 +206,12 @@ v3 <- var(d1d12lnserie)
 |----------|---------|------------|--------------|
 | Varianza | `r v1`  | `r v2`     | `r v3`       |
 
-Se observa que la serie con menor varianza es aquella que presenta escala logarítmica y una diferenciación estacional. Por tanto, significa que la diferenciación regular no es necesaria. Aún así, ésta se mantendrá por el motivo expuesto anteriormente, para conseguir que la media tome el valor 0. 
+Se observa que la segunda serie presenta una menor varianza pero no se aleja significativamente de la tercera y, como deseábamos tener un valor nulo de la media, nos quedamos con esta.
 
->
 
 ### Identificación de modelos pausibles
 
-Para identificar algunos modelos se grafican el ACF y el PACF de la serie estacionaria. 
-
-Cabe destacar que primeramente se seleccionarán los modelos más parsimoniosos. Si en el apartado de *validación* no se valida ninguno de ellos, se volverá al presente apartado para proponer otros modelos más complejos. 
-
-Para una mejor identificación, en el siguiente gráfico se muestra en color rojo los "s" rezagos estacionales de la función (P)ACF. En negro, todos los rezagos regulares. 
+Para identificar algunos modelos graficamos el ACF y el PACF de la serie estacionaria. En el siguiente gráfico se muestra en color rojo los "s" rezagos estacionales de la función (P)ACF. En negro, todos los rezagos regulares. 
 
 ```{r echo = FALSE, fig.align='center', fig.dim = c(7, 3)}
 par(mfrow=c(1,2))
@@ -227,7 +220,272 @@ acf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,11)),lwd=2)
 pacf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(rep(1,11), 2),lwd=2)
 ```
 
-Antes de la proposición de modelos, cabe especificar que se confirma que se ha llegado a la serie estacionaria ya que los valores de la ACF decaen de manera rápida hacia el 0. 
+Podemos confirmar que se ha llegado a la serie estacionaria ya que los valores de ACF disminuyen hacia el 0.
 
 \medskip
 
+Observando las gráficas se concluye que: 
+
+- *Opciones para la parte regular*: MA(1), AR(2)
+
+- *Opciones para la parte estacional*: SMA(1), SAR(1) con S=12
+
+Todas ellas con las diferenciaciones aplicadas, una regular (d = 1) y otra estacional (D = 1 con S = 12). 
+
+Así pues, se obtienen 4 posibles combinaciones, 4 modelos propuestos. 
+
+\pagebreak
+
+### Forma compacta y usando el operador de retardo B de los modelos identificados
+
+$W_t = (1-B)^d(1-B^S)^D ln(W_t)$
+
+\medskip
+
+\underline{Modelo 1:}  $MA(1)SMA(1)_{12}$ para $W_t$
+
+Forma compacta de modelo ARIMA para $ln(X_t)$
+
+$(1-B)(1-B^{12}) ln(X_t) = \theta_1(B)\Theta_1(B^{12})Z_t, d = 1,\; y \; D = 1 \; con \; S = 12$
+
+Sustituyendo cada polinomio característico se obtiene:
+
+$(1-B)(1-B^{12}) ln(X_t) = (1+\theta_1B)(1+\Theta_1B^{12})Z_t$
+
+\medskip
+
+\underline{Modelo 2:} $AR(2)SMA(1)_{12}$ para $W_t$
+
+Forma compacta de modelo ARIMA para $ln(X_t)$
+
+$\phi_2(B) (1-B)(1-B^{12}) ln(X_t) = \Theta_1(B^{12})Z_t, d = 1,\; y \; D = 1 \; con \; S = 12$
+
+Sustituyendo cada polinomio característico se obtiene:
+
+$(1-\phi_1B-\phi_2B^2)(1-B)(1-B^{12}) ln(X_t) = (1+\Theta_1B^{12})Z_t$
+
+\medskip
+
+\underline{Modelo 3:} $MA(1)SAR(1)_{12}$ para $W_t$ 
+
+Forma compacta de modelo ARIMA para $ln(X_t)$
+
+$(1-\phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) =\theta_1(B)Z_t, d = 1,\; y \; D = 1 \; con \; S = 12$
+
+Sustituyendo cada polinomio característico se obtiene:
+
+$(1-\phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = (1+\theta_1B)Z_t$
+
+\medskip
+
+\underline{Modelo 4:} $AR(2)SAR(1)_{12}$ para $W_t$
+
+Forma compacta de modelo ARIMA para $ln(X_t)$
+
+$\phi_2(B)(1-\phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = Z_t, d = 1,\; y \; D = 1 \; con \; S = 12$
+
+Sustituyendo cada polinomio característico se obtiene:
+
+$(1-\phi_1B-\phi_2B^2)(1-\phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = Z_t$
+
+## Estimación de los modelos
+
+Una vez se han expusto los modelos posibles, se procede a realizar su estimación a partir de la funció `arima`. Cabe destacar que dicha estimación se hará para la serie estacionaria y para la serie no estacionaria. Así pues, en total se verán seis modelos. Además, se calcularan los `T-ratios` para cada uno de los coeficientes. Éstos, deberán tomar un valor superior a 2 para que sean necesarios en la explicación de los datos. Por contra, si son inferiores a 2, no seran necesarios. Por esta misma razón, en los modelos de la serie estacionaria, se quiere que el valor del `intercept` salga no significativo, ya que se ha realizado una diferenciación regular extra para conseguir este mismo propòsito, que la media, el `intercept`, sea igual a 0. 
+
+\medskip
+
+### Modelo 1A, MA(1)SMA(1)$_{12}$
+
+Se impone a la serie estacional  `d1d12lnserie` el modelo identificado: ARIMA(0, 0, 1)(0, 0, 1)$_{12}$.
+
+```{r echo = FALSE}
+mod1A = arima(d1d12lnserie, order = c(0,0,1), seasonal = list(order = c(0,0,1), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 1a \n T-ratios:",round(mod1A$coef/sqrt(diag(mod1A$var.coef)),2))
+```
+El T-ratio del `intercept` es menor a 2, así que se plantea el modelo sin este coeficiente.
+
+\medskip
+
+### Modelo 1B, usando la serie no-estacionaria $ln(X_t)$ (lnserie)
+
+Se elimina el coeficiente `intercept`, estimando el modelo con la serie original en logaritmos (sin aplicar ninguna diferenciación).
+
+```{r echo = FALSE}
+mod1B = arima(lnserie, order = c(0,1,1), seasonal = list(order = c(0,1,1), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 1b \nT-ratios:",round(mod1B$coef/sqrt(diag(mod1B$var.coef)),2))
+```
+Todos los coeficientes son estadísticamente significativos, no es necesario eliminar nada más. Se calcula el AIC de los modelos con y sin `intercept` para saber cuál de ellos tiene un valor menor de esta medida.
+
+| Modelo    | AIC             |
+|-----------|-----------------|
+| Con `intercept` | `r AIC(mod1A)`  |
+| Sin `intercept` | `r AIC(mod1B)` |
+
+Es mejor el modelo con `intercept`, aunque la diferencia entre ambos modelos es muy pequeña.
+
+\medskip
+
+### Modelo 2A, AR(2)SMA(1)$_{12}$
+
+Se impone a la serie estacional  `d1d12lnserie` el modelo identificado: ARIMA(2, 0, 0)(0, 0, 1)$_{12}$
+
+```{r echo = FALSE}
+mod2A = arima(d1d12lnserie, order = c(2,0,0), seasonal = list(order = c(0,0,1), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 2a \nT-ratios:",round(mod2A$coef/sqrt(diag(mod2A$var.coef)),2))
+```
+
+El T-ratio del `intercept` es menor a 2, así que se plantea el modelo sin este coeficiente.
+
+\medskip
+
+### Modelo 2B, usando la serie no-estacionaria $ln(X_t)$ (lnserie)
+
+Se elimina el coeficiente `intercept`, estimando el modelo con la serie original en logaritmos (sin ninguna diferenciación).
+
+```{r echo = FALSE}
+mod2B = arima(lnserie, order = c(2,1,0), seasonal = list(order = c(0,1,1), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 2b \nT-ratios:",round(mod2B$coef/sqrt(diag(mod2B$var.coef)),2))
+```
+
+Todos los coeficientes son estadísticamente significativos, no es necesario eliminar nada más. Se calcula el AIC de los modelos con y sin `intercept` para saber cuál de ellos tiene un valor menor de esta medida.
+
+| Modelo    | AIC             |
+|-----------|-----------------|
+| Con `intercept` | `r AIC(mod2A)`  |
+| Sin `intercept` | `r AIC(mod2B)` |
+
+Es mejor el modelo con `intercept`, aunque la diferencia entre ambos modelos es muy pequeña.
+
+\medskip
+
+### Modelo 3A, MA(1)SAR(1)$_{12}$
+
+Se impone a la serie estacional `d1d12lnserie`el modelo identificado: ARIMA(0, 0, 1)(1, 0, 0)$_{12}$
+
+```{r echo = FALSE}
+mod3A = arima(d1d12lnserie, order = c(0,0,1), seasonal = list(order = c(1,0,0), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 3a \nT-ratios:",round(mod3A$coef/sqrt(diag(mod3A$var.coef)),2))
+```
+
+El T-ratio del `intercept` es menor a 2, así que se plantea el modelo sin este coeficiente.
+
+\medskip
+
+### Modelo 3B, usando la serie no-estacionaria $ln(X_t)$ (lnserie)
+
+```{r echo = FALSE}
+mod3B = arima(lnserie, order = c(0,1,1), seasonal = list(order = c(1,1,0), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 3b \nT-ratios:",round(mod3B$coef/sqrt(diag(mod3B$var.coef)),2))
+```
+
+No es necesario eliminar nada más. Se calcula el AIC de los modelos con y sin `intercept`, para saber cuál de ellos tiene un menor valor de esta medida.
+
+| Modelo    | AIC             |
+|-----------|-----------------|
+| Con `intercept` | `r AIC(mod3A)`  |
+| Sin `intercept` | `r AIC(mod3B)` |
+
+En este caso, es mejor el modelo sin `intercept`, aunque la diferencia entre ambos modelos es muy pequeña.
+
+\medskip
+
+### Modelo 4A, AR(2)SAR(1)$_{12}$
+
+Se impone a la serie estacional `d1d12lnserie` el modelo identificado: ARIMA(2, 0, 0)(1, 0, 0)$_{12}$
+
+```{r echo = FALSE}
+mod4A = arima(d1d12lnserie, order = c(2,0,0), seasonal = list(order = c(1,0,0), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 4a \nT-ratios:",round(mod4A$coef/sqrt(diag(mod4A$var.coef)),2))
+```
+
+El T-ratio del `intercept` es menor a 2, así que se plantea el modelo sin este coeficiente.
+
+\medskip
+
+### Modelo 4B, usando la serie no-estacionaria $ln(X_t)$ (lnserie)
+
+```{r echo = FALSE}
+mod4B = arima(lnserie, order = c(2,1,0), seasonal = list(order = c(1,1,0), period=12))
+```
+
+Se calculan los T-ratios para cada coeficiente para ver cuáles son estadísticamente significativos:
+
+```{r echo = FALSE}
+cat("Modelo 4b \nT-ratios:",round(mod4B$coef/sqrt(diag(mod4B$var.coef)),2))
+```
+
+No es necesario eliminar nada más. Se calcula el AIC de los modelos con y sin `intercept`, para saber cuál de ellos tiene un menor valor de esta medida.
+
+| Modelo    | AIC             |
+|-----------|-----------------|
+| Con `intercept` | `r AIC(mod4A)`  |
+| Sin `intercept` | `r AIC(mod4B)` |
+
+En este caso, es mejor el modelo sin `intercept`, aunque la diferencia entre ambos modelos es muy pequeña.
+
+\medskip
+
+### Tabla resumen
+
+Realizamos una tabla resumen para los cuatro modelos definitivos con el objetivo de poder ver de forma más clara la comparación entre ellos.
+
+\medskip
+
+```{r echo = FALSE}
+#install.packages("stargazer")
+library("stargazer")
+stargazer(mod1A, mod2A, mod3A, mod4A, title="Results", type="text", notes.append = FALSE, report = "vtc",
+notes = c("t = T-statistic value = coeff/SE(coeff)"), digits = 3,  column.labels = c("1A","2A","3A","4A"))
+```
+
+\medskip
+
+En la tabla anterior se observan las estimaciones y los T-ratios de los coeficientes de los 4 modelos estimados. Antes de proceder a la explicación, se recuerda a que hace referencia cada uno de ellos: 
+
+- Modelo 1: $MA(1)SMA(1)_{12}$ 
+- Modelo 2: $AR(2)SMA(1)_{12}$
+- Modelo 3: $MA(1)SAR(1)_{12}$
+- Modelo 4: $AR(2)SAR(1)_{12}$
+- Modelos A: estimación con la serie estacionaria
+- Modelos B: estimación con la serie NO estacionaria
+
+Como se deseaba, todos los T-ratios son mayores de 2, excepto los que hacen refererencia al `intercept` de la serie estacionaria. Se concluye que todos los coeficientes son necesarios para explicar los datos. 
+
+Observando el críterio del AIC, se puede decir que los mejores modelos son aquellos que tienen un valor menor en esta medida de calidad relativa. Así pues, a partir de ahora, solo se seguirán estudiando los modelos 1A y 2A ya que son estos los que tienen un valor más negativo.
+
+\medskip

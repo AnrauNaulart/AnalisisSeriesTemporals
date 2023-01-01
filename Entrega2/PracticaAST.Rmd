@@ -945,3 +945,13 @@ Se observa que la predicción en un tiempo extrapolable al de los datos sigue el
 Por tanto, gracias a la predicción observada, se puede decir que ya se ha cumplido el objetivo principal del estudio. 
 
 \pagebreak
+
+# Conclusiones
+
+Después de realizar las evaluaciones correspondientes y utilizar los métodos ya conocidos y mencionados con anterioridad, se concluye que la serie temporal correspondiente al número de viajeros españoles en alojamientos de turismo rural se puede explicar como un modelo $MA(1)SMA(1)_{12}$.
+
+Para llegar a esta conclusión ha sido necesario transformar la serie original con el fin de convertirla en una serie estacionaria. Para ello, se ha debido de aplicar una transformación logarítmica y hacer una diferenciación regular y otra estacional. Una vez conseguida la serie en el formato deseado, se han identificado 4 posibles modelos que podrían encajar con los datos estudiados, aunque dos de ellos han sido descartados por tener una medida de adecuación a los datos bastante inferiores en comparación al resto de opciones. Así pues, a los dos modelos resultantes, se les ha hecho una validación, se ha verificado su estabilidad y se ha observado su capacidad predictiva. A partir de los resultados obtenidos, se ha seleccionado un solo modelo, el mejor de ellos, el cual ha resultado ser un $MA(1)SMA(1)_{12}$. Este modelo tenía un AIC igual a -203.7712, un error de predicción de 28.5% y 25.7% en los casos de EQM y EAM, respectivamente y una amplitud de predicción de 408.5. 
+
+Finalmente y a partir del modelo seleccionado, se ha llevado a cabo el objetivo principal del estudio: hacer una predicción para el número de viajeros en turismo rural que hubiera habido en el año 2020 si no hubiera existido la pandemia del Covid-19. En este supuesto, se hubiera esperado la misma tendencia lineal creciente y el mismo patrón mensual que lo visto hasta el momento. 
+
+\pagebreak

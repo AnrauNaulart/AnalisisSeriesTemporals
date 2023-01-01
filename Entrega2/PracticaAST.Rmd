@@ -492,7 +492,7 @@ Observando el críterio del AIC, se puede decir que los mejores modelos son aque
 
 # Validación de los modelos ajustados
 
-Como se ha comentado anteriormente, solo se va a comprobar la validación de 2 de los 4 modelos propuestos. En caso que esta no se cumpla, se seleccionarán otros modelos y se repetirá el proceso que se verá a continuación. Pero, *¿Qué necesita un modelo para ser validado?*
+A partir de la comprobación anterior, validaremos los 2 modelos propuestos. Para que puedan ser validados seguiremos los siguientes pasos:
 
 - Los residuos tienen que tener varianza constante y ser normales e independientes
 - En el ACF y PACF de los residuos se tiene que observar que estos se distribuyen como un `Ruido Blanco`. 
@@ -603,7 +603,7 @@ validation_grafic(model)
 ```
 **Residuals:** Los residuos parecen aleatorios y la mayoría se encuentran dentro de las bandas de confianza, centrados en 0.
 
-**Square Root of Absolute residuals:** La línea roja es nada constante, por lo tanto la varianza también lo es.
+**Square Root of Absolute residuals:** La línea roja es constante, por lo tanto la varianza también lo es.
 
 **Normal QQ-Plot:** Hay algunos valores atípicos en las colas.
 
@@ -613,7 +613,7 @@ validation_grafic(model)
 
 \medskip
 
-A continuación se realiza el test de Breusch-Pagan y se contrastan las siguientes hipótesis:
+Realizamos el test de Breusch-Pagan y contrastamos las siguientes hipótesis:
 
 - $H_0$: Los residuos son homocedasticos
 - $H_1$: Los residuos no son homocedasticos
@@ -621,11 +621,11 @@ A continuación se realiza el test de Breusch-Pagan y se contrastan las siguient
 ```{r echo = FALSE, results = 'hide'}
 validation_test_homoce(model)
 ```
-Se obtiene un p-valor superior a 0.05, así que se afirma que los residuos son homocedasticos.
+Obtenemos un p-valor superior a 0.05, así que afirmamos que los residuos son homocedasticos.
 
 \medskip 
 
-A continuación se realizan los tests de Shapiro-Wilk, Anderson-Darling y Jarque Bera y contrastan las siguientes hipótesis:
+Realizamos los tests de Shapiro-Wilk, Anderson-Darling y Jarque Bera y contrastamos las siguientes hipótesis:
 
 - $H_0$: Los residuos son normales
 - $H_1$: Los residuos no son normales
@@ -633,18 +633,18 @@ A continuación se realizan los tests de Shapiro-Wilk, Anderson-Darling y Jarque
 ```{r echo = FALSE, results = 'hide'}
 validation_test_normal(model)
 ```
-Se obtienen p-valores superiores a 0.05, así que se afirma que los residuos son normales. Hay que tener en cuenta que los tests de Normalidad son muy sensibles a valores atípicos, de manera que se prestará más atención al gráfico QQ-plot, donde se ha visto que los residuos centrales si cumplen la normalidad pero los pertenecientes a las colas no. 
+Obtenemos p-valores superiores a 0.05, así que afirmamos que los residuos son normales. Hay que tener en cuenta que los tests de Normalidad son muy sensibles a valores atípicos, de manera que se prestará más atención al gráfico QQ-plot, donde se ha visto que los residuos centrales si cumplen la normalidad pero los pertenecientes a las colas no. 
 
 \medskip
 
-A continuación se contrastan las siguientes hipótesis:
+A continuación contrastamos las siguientes hipótesis:
 
 *Durbin-Watson test*
 
 - $H_0$: No hay autocorrelación en los residuos en el retardo k
 - $H_1$: Hay autocorrelación en los residuos en el retardo k
 
-Se obtiene un p-valor superior a 0.05, así que se afirma que no hay autocorrelación en los residuos.
+Se obtiene un p-valor superior a 0.05, así que afirmamos que no hay autocorrelación en los residuos.
 
 *Ljung-Box test*
 
@@ -665,7 +665,7 @@ validation_acf_pacf(model)
 
 Con los gráficos ACF y PACF de los residuos se reafirma el resultado del test de Durbin-Watson: No hay autocorrelación en los residuos, ya que todos los retardos se encuentran dentro de las bandas de confianza.
 
-En los gráficos ACF y PACF de los residuos al cuadrado tampoco se observa autocorrelación.
+En los gráficos ACF y PACF de los residuos al cuadrado tampoco se observa autocorrelación. Así pues, se puede afirmar que no hay presencia de outliers ni hay volatilidad.
 
 \medskip
 
@@ -732,8 +732,6 @@ validation_test_indepen(model)
 
 Se obtiene un p-valor superior a 0.05 en el retardo (lag) 36. Tal y como está programada la función significa que como mínimo hasta el retardo 48 no hay una estructura de autocorrelación.
 
->
-
 ```{r echo = FALSE, fig.align='center', fig.dim = c(7, 3)}
 validation_acf_pacf(model)
 ```
@@ -741,11 +739,6 @@ validation_acf_pacf(model)
 Con los gráficos ACF y PACF de los residuos se reafirma el resultado del test de Durbin-Watson: No hay autocorrelación en los residuos, ya que casi todos los retardos se encuentran dentro de las bandas de confianza.
 
 En los gráficos ACF y PACF de los residuos al cuadrado tampoco se observa autocorrelación. Así pues, se puede afirmar que no hay presencia de outliers ni hay volatilidad.
-
->
-
->
-
 
 # Predicción de modelos ARIMA ajustados y validados
 
@@ -870,9 +863,6 @@ mod.ML2=sum(tu-tl)/12
 |-----|--------------|
 | EQM | `r mod.EQM2` |
 | EAM | `r mod.EAM2` |
-
->
-
 
 # Selección del mejor modelo 
 

@@ -26,17 +26,20 @@ header-includes:
 - \renewcommand{\and}{\\}
 ---
 
+
+\renewcommand{\contentsname}{Índex}
+\renewcommand{\figurename}{Figura}
+\renewcommand{\tablename}{Taula}
+
 \captionsetup{width=.75\textwidth}
 
-
-<left align="center"> 
+<left> 
   ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\ub.png){width="50%"}
 
 </left> <right>
         ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\upc.png){width="50%"}
 </right> 
         
-
 \vspace{60mm}
         
 ```{=tex}
@@ -44,7 +47,6 @@ header-includes:
 \renewcommand{\figurename}{Figura}
 \renewcommand{\tablename}{Taula}
 ```
-
 
 ```{=tex}
 \begin{center}

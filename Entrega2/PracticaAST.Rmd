@@ -72,6 +72,9 @@ El objetivo principal de este informe es ver cuál era el comportamiento del nú
 
 Para la elección de los años analizados, se ha evitado estudiar aquellos momentos temporales en los que había un factor condicionante. Por tanto, los datos tomados dejan fuera la crisis económica del 2008 y la pandemia del 2020. También tendremos en cuenta que a principios del 2012 hubo el desastre de la naviera italiana Costa Concordia con 32 muertos, lo cual hizo que hubiera un descenso significativo en el número de pasajeros en los cruceros del Mediterráneo. Teniendo esto en cuenta, solo se han seleccionado los datos mensuales pertenecientes al espacio temporal comprendido entre 2012 y 2019, ambos períodos incluidos.
 
+<center> 
+  ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\grafic.png){width="50%"}
+
 \medskip
 
 ## Definición precisa de la variable

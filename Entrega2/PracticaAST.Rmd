@@ -5,16 +5,16 @@ author:
 - Nualart Sanz, Arnau
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  pdf_document:
-    fig_caption: yes
-    number_sections: yes
-    toc_depth: 2
   html_document:
     toc: yes
     toc_float: yes
     code_folding: hide
     theme: united
     highlight: tango
+  pdf_document:
+    fig_caption: yes
+    number_sections: yes
+    toc_depth: 2
   word_document:
     toc: yes
 subtitle: Segona pràctica Anàlisi de Series Temporals
@@ -33,29 +33,18 @@ header-includes:
 
 \captionsetup{width=.75\textwidth}
 
-<left> 
-  ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\ub.png){width="50%"}
-
-</left> <right>
-        ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\upc.png){width="50%"}
-</right> 
+|||
+|---|---| 
+|![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\ub.png){width="40%"}|![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\upc.png){width="40%"}|
         
 \vspace{60mm}
-        
-```{=tex}
-\renewcommand{\contentsname}{Índex}
-\renewcommand{\figurename}{Figura}
-\renewcommand{\tablename}{Taula}
-```
-
-```{=tex}
+      
 \begin{center}
 El objetivo de este informe es ver el comportamiento del número de pasajeros en el puerto de Barcelona durante los años 2012 - 2019 y hacer una predicción para el período 2020 - 2022 si no se tuvieran en cuenta los efectos causados por la pandemia del SARS-CoV-2. 
 Se observa que los datos presentan tendencia creciente y estacionalidad multiplicativa. Es decir, con el paso de los años la demanda fue aumentando. Además, hay un claro patrón estacional que muestra que en los meses de verano el número es superior a los meses de otoño e invierno. 
 En cuanto a la predicción, la demanda sigue aumentando de manera multiplicativa y siguiendo el mismo patrón estacional. 
 \end{center}
-```
- 
+
 \newpage
  
 \pagebreak
@@ -74,10 +63,11 @@ El objetivo principal de este informe es ver cuál era el comportamiento del nú
 
 Para la elección de los años analizados, se ha evitado estudiar aquellos momentos temporales en los que había un factor condicionante. Por tanto, los datos tomados dejan fuera la crisis económica del 2008 y la pandemia del 2020. También tendremos en cuenta que a principios del 2012 hubo el desastre de la naviera italiana Costa Concordia con 32 muertos, lo cual hizo que hubiera un descenso significativo en el número de pasajeros en los cruceros del Mediterráneo. Teniendo esto en cuenta, solo se han seleccionado los datos mensuales pertenecientes al espacio temporal comprendido entre 2012 y 2019, ambos períodos incluidos.
 
-<center> 
-  ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\grafic.png){width="50%"}
+\smallskip
 
-\medskip
+<center>
+  ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\grafic.png){width="50%"}
+</center>
 
 ## Definición precisa de la variable
 

@@ -1,7 +1,7 @@
 ---
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ---
@@ -55,9 +55,12 @@ En cuanto a la predicción, la demanda sigue aumentando de manera multiplicativa
  
 \pagebreak
 
-<font size = 8>
+\begin{small}
 \tableofcontents
-</font>
+\end{small}
+
+
+
 
 \pagebreak
 

@@ -5,10 +5,6 @@ author:
 - Nualart Sanz, Arnau
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  pdf_document:
-    fig_caption: yes
-    number_sections: yes
-    toc_depth: 2
   word_document:
     toc: yes
   html_document:
@@ -17,6 +13,10 @@ output:
     code_folding: hide
     theme: united
     highlight: tango
+  pdf_document:
+    fig_caption: yes
+    number_sections: yes
+    toc_depth: 2
 subtitle: Segona pràctica Anàlisi de Series Temporals
 header-includes:
 - \pagenumbering{gobble}
@@ -30,11 +30,11 @@ header-includes:
 
 
 <left align="center"> 
-  ![](D:/Universitat/Cuart de carrera/Analisis de Series Temporals/ub.png){width="50%"}
+  ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\ub.png){width="50%"}
 
-<right> 
-        ![](D:/Universitat/Cuart de carrera/Analisis de Series Temporals/upc.png){width="50%"}
-      </left>
+</left> <right>
+        ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\upc.png){width="50%"}
+</right> 
         
 
 \vspace{60mm}
@@ -950,8 +950,6 @@ Finalmente y a partir del modelo seleccionado, se ha llevado a cabo el objetivo 
 # Anexo
 
 **#Aplicación empírica**
-
-
 
 ```{r echo = TRUE, fig.align = 'center', fig.dim=c(7, 4)}
 serie=window(ts(read.table("PasajeBCN.dat"),start=1997,freq=12),start=2009)

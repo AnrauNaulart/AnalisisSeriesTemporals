@@ -1,4 +1,10 @@
 ---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+---
 title: Número de pasajeros en el Puerto de Barcelona (2012-2019)
 author:
 - Garcia Sató, Pol
@@ -35,7 +41,7 @@ header-includes:
 
 |||
 |---|---| 
-|![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\ub.png){width="40%"}|![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\upc.png){width="40%"}|
+|![](D:/Universitat/Quart de carrera/Analisis de Series Temporals/ub.png){width="40%"}|![](D:/Universitat/Quart de carrera/Analisis de Series Temporals/Upc.png){width="40%"}|
         
 \vspace{60mm}
       
@@ -53,7 +59,9 @@ En cuanto a la predicción, la demanda sigue aumentando de manera multiplicativa
 
 \pagebreak
 
-# Introducció
+\pagenumbering{arabic}
+
+# Introducción
 
 ## Descripción del entorno y el problema - motivación del trabajo
 
@@ -65,8 +73,10 @@ Para la elección de los años analizados, se ha evitado estudiar aquellos momen
 
 \smallskip
 
-<center>
-  ![](C:/Users\polgs\Desktop\Grau estadística UB\4rt de carrera\1er Quadrimestre\AnalisisSeriesTemporals\Entrega2\Imatges\grafic.png){width="50%"}
+
+
+<center align="center">
+  ![src*='#center'](D:/Universitat/Quart de carrera/Analisis de Series Temporals/grafic.png){width="50%"}
 </center>
 
 ## Definición precisa de la variable
@@ -90,6 +100,8 @@ En este apartado se observan cuáles son las características principales de la 
 A partir del análisis realizado en el apartado anterior se decide qué tipo de serie se ajusta mejor a nuestros datos. A partir de aquí, se hace una predicción para observar cuál sería el número de viajeros en alojamientos rurales en los próximos años si no existiera ningún factor condicionante que actuará como brecha, en el caso expuesto, si no existiera la pandemia del Covid-19. 
 
 \medskip
+
+\newpage
 
 # Aplicación empírica
 ## Análisis descriptivo de la serie
@@ -487,6 +499,8 @@ Observando el críterio del AIC, se puede decir que los mejores modelos son aque
 
 -----------------------------------
 
+\newpage
+
 # Validación de los modelos ajustados
 
 Para validar los modelos propuestos, seguiremos los siguientes pasos:
@@ -731,6 +745,8 @@ Los gráficos ACF (autocorrelación) y PACF (autocorrelación parcial) de los re
 
 Además, al examinar los gráficos ACF y PACF de los residuos al cuadrado, también observamos que no hay autocorrelación presente. Esto nos permite afirmar que no hay presencia de outliers ni hay volatilidad en los datos, lo que es una buena señal para la validez del modelo. 
 
+\newpage
+
 # Predicción de modelos ARIMA ajustados y validados
 
 ```{r echo = FALSE}
@@ -953,11 +969,9 @@ abline(v = 2009:2019, col = 4, lty = 3)
 
 ```{r eval = TRUE, fig.align='center', fig.dim = c(7, 2.9)}
 par(mfrow=c(1,2))
-
 m = apply(matrix(serie,ncol=12),2,mean)
 v = apply(matrix(serie,ncol=12),2,var)
 plot(v~m,main="Mean-Variance plot")
-
 boxplot(serie~floor(time(serie)), main = "Boxplot")
 ```
 
@@ -1002,7 +1016,6 @@ v3 <- var(d1d12lnserie)
 
 ```{r eval = FALSE, fig.align='center', fig.dim = c(7, 3)}
 par(mfrow=c(1,2))
-
 acf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(2,rep(1,11)),lwd=2)
 pacf(d1d12lnserie,ylim=c(-1,1),lag.max=60,col=c(rep(1,11), 2),lwd=2)
 ```

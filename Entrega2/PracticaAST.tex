@@ -132,11 +132,26 @@
 \begin{document}
 \maketitle
 
+\renewcommand{\contentsname}{Índex}
+\renewcommand{\figurename}{Figura}
+\renewcommand{\tablename}{Taula}
+
 \captionsetup{width=.75\textwidth}
 
-\includegraphics[width=0.5\textwidth,height=\textheight]{C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/ub.png}
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule()
+\endhead
+\includegraphics[width=0.4\textwidth,height=\textheight]{C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/ub.png}
+&
+\includegraphics[width=0.4\textwidth,height=\textheight]{C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/upc.png} \\
+\bottomrule()
+\end{longtable}
 
-\includegraphics[width=0.5\textwidth,height=\textheight]{C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/upc.png}
+\includegraphics[width=0.4\textwidth,height=\textheight]{C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/ub.png}
+
+\includegraphics[width=0.4\textwidth,height=\textheight]{C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/upc.png}
 
 \vspace{60mm}
 
@@ -144,11 +159,26 @@
 \renewcommand{\figurename}{Figura}
 \renewcommand{\tablename}{Taula}
 
-\begin{center}
-El objetivo de este informe es ver el comportamiento del número de pasajeros en el puerto de Barcelona durante los años 2012 - 2019 y hacer una predicción para el período 2020 - 2022 si no se tuvieran en cuenta los efectos causados por la pandemia del SARS-CoV-2. 
-Se observa que los datos presentan tendencia creciente y estacionalidad multiplicativa. Es decir, con el paso de los años la demanda fue aumentando. Además, hay un claro patrón estacional que muestra que en los meses de verano el número es superior a los meses de otoño e invierno. 
-En cuanto a la predicción, la demanda sigue aumentando de manera multiplicativa y siguiendo el mismo patrón estacional. 
-\end{center}
+\begin{longtable}[]{@{}l@{}}
+\toprule()
+\endhead
+```\{=tex\} \\
+\textbackslash begin\{center\} \\
+El objetivo de este informe es ver el comportamiento del número de
+pasajeros en el puerto de Barcelona durante los años 2012 - 2019 y hacer
+una predicción para el período 2020 - 2022 si no se tuvieran en cuenta
+los efectos causados por la pandemia del SARS-CoV-2. \\
+Se observa que los datos presentan tendencia creciente y estacionalidad
+multiplicativa. Es decir, con el paso de los años la demanda fue
+aumentando. Además, hay un claro patrón estacional que muestra que en
+los meses de verano el número es superior a los meses de otoño e
+invierno. \\
+En cuanto a la predicción, la demanda sigue aumentando de manera
+multiplicativa y siguiendo el mismo patrón estacional. \\
+\textbackslash end\{center\} \\
+``` \\
+\bottomrule()
+\end{longtable}
 
 \newpage
 
@@ -192,7 +222,9 @@ los cruceros del Mediterráneo. Teniendo esto en cuenta, solo se han
 seleccionado los datos mensuales pertenecientes al espacio temporal
 comprendido entre 2012 y 2019, ambos períodos incluidos.
 
-\medskip
+\smallskip
+
+\includegraphics[width=0.5\textwidth,height=\textheight]{C:/Users/polgs/Desktop/Grau estadística UB/4rt de carrera/1er Quadrimestre/AnalisisSeriesTemporals/Entrega2/Imatges/grafic.png}
 
 \hypertarget{definiciuxf3n-precisa-de-la-variable}{%
 \subsection{Definición precisa de la
@@ -438,11 +470,11 @@ Sustituyendo cada polinomio característico se obtiene:
 
 Forma compacta de modelo ARIMA para \(ln(X_t)\)
 
-\((1-\phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) =\theta_1(B)Z_t, d = 1,\; y \; D = 1 \; con \; S = 12\)
+\((1-\Phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) =\theta_1(B)Z_t, d = 1,\; y \; D = 1 \; con \; S = 12\)
 
 Sustituyendo cada polinomio característico se obtiene:
 
-\((1-\phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = (1+\theta_1B)Z_t\)
+\((1-\Phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = (1+\theta_1B)Z_t\)
 
 \medskip
 
@@ -450,11 +482,11 @@ Sustituyendo cada polinomio característico se obtiene:
 
 Forma compacta de modelo ARIMA para \(ln(X_t)\)
 
-\(\phi_2(B)(1-\phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = Z_t, d = 1,\; y \; D = 1 \; con \; S = 12\)
+\(\phi_2(B)(1-\Phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = Z_t, d = 1,\; y \; D = 1 \; con \; S = 12\)
 
 Sustituyendo cada polinomio característico se obtiene:
 
-\((1-\phi_1B-\phi_2B^2)(1-\phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = Z_t\)
+\((1-\phi_1B-\phi_2B^2)(1-\Phi_1B^{12})(1-B)(1-B^{12}) ln(X_t) = Z_t\)
 
 \hypertarget{estimaciuxf3n-de-los-modelos}{%
 \subsection{Estimación de los
